@@ -38,7 +38,8 @@ namespace JanuszMail.Controllers
             {
                 return NotFound();
             }
-
+           
+            user.Providers = _context.Providers.Where(x => x.UserId == id).ToList();
             return View(user);
         }
 
@@ -147,6 +148,37 @@ namespace JanuszMail.Controllers
         private bool UserExists(int id)
         {
             return _context.User.Any(e => e.ID == id);
+        }
+
+
+        public async Task<IActionResult> AddProvider(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _context.User
+                .SingleOrDefaultAsync(m => m.ID == id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            ProviderModel provider = new ProviderModel();
+            return View(provider);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddProvider(int id, [Bind("ID,Login,Password,Smtp,Imap")] ProviderModel provider)
+        {
+            if (ModelState.IsValid)
+            {
+                provider.UserId=id;
+                _context.Add(provider);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            return View(provider);
         }
     }
 }

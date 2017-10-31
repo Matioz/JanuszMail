@@ -29,8 +29,27 @@ namespace JanuszMail.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("User");
+                    b.ToTable("Users");
                 });
+            modelBuilder.Entity("JanuszMail.Models.ProviderModel", b =>
+            {
+                b.Property<int>("ID")
+                    .ValueGeneratedOnAdd();
+
+                b.Property<string>("Login");
+
+                b.Property<string>("Password");
+
+                b.Property<string>("Smtp");
+
+                b.Property<string>("Imap");
+
+                b.Property<int>("UserId");
+
+                b.HasKey("ID");
+
+                b.ToTable("Providers");
+            });
 #pragma warning restore 612, 618
         }
     }

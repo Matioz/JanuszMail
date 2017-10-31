@@ -12,7 +12,7 @@ namespace JanuszMail.Models
             using (var context = new JanuszMailContext(serviceProvider.GetRequiredService<DbContextOptions<JanuszMailContext>>()))
             {
                 if (context.User.Any())
-                {
+                {                        
                     return; // DB already has been seed.
                 }
 
@@ -33,7 +33,8 @@ namespace JanuszMail.Models
                         Provider = User.ProviderType.MojaPG
                     }
                 );
-
+                
+                
                 context.SaveChanges();
             }
         }

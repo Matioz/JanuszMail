@@ -1,0 +1,8 @@
+language: generic
+sudo: required
+
+services:
+- docker
+
+script:
+- docker run januszmail/test-environment run_tests $TRAVIS_BRANCH $TRAVIS_COMMIT

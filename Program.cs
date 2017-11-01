@@ -25,6 +25,7 @@ namespace JanuszMail
                 try
                 {
                     SeedData.Initialize(services);
+                    ReceiveMail.Initialize(services);
                 }
                 catch (Exception ex)
                 {

@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using JanuszMail.Data;
 using JanuszMail.Models;
 using JanuszMail.Services;
+using JanuszMail.Interfaces;
 
 namespace JanuszMail
 {
@@ -37,6 +38,8 @@ namespace JanuszMail
             services.AddTransient<IEmailSender, EmailSender>();
 
             services.AddMvc();
+
+            services.AddTransient<IProvider, Provider>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

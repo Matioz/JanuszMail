@@ -13,6 +13,10 @@ namespace JanuszMail.Interfaces
         Tuple<IList<string>, HttpResponse> GetFolders();
         Tuple<IList<string>, HttpResponse> GetSubjectsFromFolder(string folder, int page, int pageSize);
         HttpResponse SendEmail(MailMessage mailMessage);
+        HttpResponse RemoveEmail(MailMessage mailMessage);
+        HttpResponse MoveEmailToFolder(MailMessage mailMessage, string folder);
+        HttpResponse MarkEmailAsRead(MailMessage mailMessage);
+        HttpResponse MarkEmailAsUnread(MailMessage mailMessage);
         HttpResponse Connect(ProviderParams providerParams);
         HttpResponse Disconnect(ProviderParams providerParams);
     }

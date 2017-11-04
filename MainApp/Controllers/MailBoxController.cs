@@ -30,7 +30,7 @@ namespace JanuszMail.Controllers
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
-            var providerParams = _dbContext.ProviderParams.SingleOrDefaultAsync(p => p.User == user);
+            var providerParams = _dbContext.ProviderParams.SingleOrDefaultAsync(p => p.UserId == user.Id);
             return View();
         }
         public async Task<IActionResult> ShowMails(int? page, int? pageSize, string folder, string sortOrder, string subject, string sender)

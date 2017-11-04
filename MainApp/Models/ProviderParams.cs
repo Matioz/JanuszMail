@@ -18,6 +18,6 @@ namespace JanuszMail.Models
         public string SmtpServerName { get; set; }
         [Required]
         public int SmtpPortNumber { get; set; }
-        public ApplicationUser User { get; set; }
+        public string UserId { get; set; }
     }
 }

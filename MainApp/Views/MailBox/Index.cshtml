@@ -1,0 +1,15 @@
+@model JanuszMail.Services.Provider
+@{
+    ViewData["Title"] = "MailBox";
+}
+
+<h2>MailBox</h2>
+@foreach (var item in Model.Subjects) {
+    <table class="table">
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item)
+            </td>
+        </tr>
+     </table>
+}

@@ -6,17 +6,21 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using System;
+using System.Linq;
 
 namespace JanuszMail.Controllers
 {
     [Authorize]
     public class MailBoxController : Controller
     {
+        private ProviderParams _providerParams;
+
         public MailBoxController(IProvider provider, UserManager<ApplicationUser> userManager, JanuszMailDbContext dbContext)
         {
             this._provider = provider;
             this._userManager = userManager;
             this._dbContext = dbContext;
+            
         }
         // GET: MailBox
         public async Task<IActionResult> Index()
@@ -30,8 +34,11 @@ namespace JanuszMail.Controllers
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
-            var providerParams = _dbContext.ProviderParams.SingleOrDefaultAsync(p => p.UserId == user.Id);
-            return View();
+            var providerParams = _dbContext.ProviderParams.Where(p => p.UserId == user.Id).ToList();
+            _providerParams=providerParams.First();
+            _provider.Connect(_providerParams);
+            _provider.GetSubjectsFromFolder("Inbox", 0, 10);
+            return View(_provider);
         }
         public async Task<IActionResult> ShowMails(int? page, int? pageSize, string folder, string sortOrder, string subject, string sender)
         {

@@ -25,6 +25,8 @@ namespace JanuszMail.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
         private readonly UrlEncoder _urlEncoder;
+        private readonly JanuszMail.Models.JanuszMailDbContext _context;
+
 
         private const string AuthenicatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
 
@@ -33,6 +35,7 @@ namespace JanuszMail.Controllers
           SignInManager<ApplicationUser> signInManager,
           IEmailSender emailSender,
           ILogger<ManageController> logger,
+          JanuszMail.Models.JanuszMailDbContext context,
           UrlEncoder urlEncoder)
         {
             _userManager = userManager;
@@ -40,6 +43,7 @@ namespace JanuszMail.Controllers
             _emailSender = emailSender;
             _logger = logger;
             _urlEncoder = urlEncoder;
+            _context = context;
         }
 
         [TempData]
@@ -62,7 +66,7 @@ namespace JanuszMail.Controllers
                 IsEmailConfirmed = user.EmailConfirmed,
                 StatusMessage = StatusMessage
             };
-
+            model.Providers = _context.ProviderParams.Where(x => x.UserId == user.Id).ToList();
             return View(model);
         }
 
@@ -175,6 +179,29 @@ namespace JanuszMail.Controllers
             StatusMessage = "Your password has been changed.";
 
             return RedirectToAction(nameof(ChangePassword));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AddProvider()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+            var model = new ProviderParams();
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddProvider(int id, JanuszMail.Models.ProviderParams model)
+        {
+            ApplicationUser u = await _userManager.GetUserAsync(User);
+            model.UserId = u.Id;
+            _context.ProviderParams.Add(model);
+            _context.SaveChanges();
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]

@@ -4,16 +4,17 @@ using JanuszMail.Interfaces;
 using JanuszMail.Models;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace JanuszMail.Controllers
 {
-    //[Authorize]  //TODO: Enable it when authorize will be enabled
+    [Authorize]
     public class MailBoxController : Controller
     {
-        public MailBoxController(IProvider provider, JanuszMailContext context)
+        public MailBoxController(IProvider provider, UserManager<ApplicationUser> userManager)
         {
             this._provider = provider;
-            this._context = context;
+            this._userManager = userManager;
         }
         // GET: MailBox
         public IActionResult Index()
@@ -25,19 +26,19 @@ namespace JanuszMail.Controllers
         {
             //Should return partial view with PagedList of MailMessages that matches to given params
             //When there is no matching messages then should return partial view with error message
-            return PartialView("_Search", await _context.User.ToListAsync());
+            return PartialView("_Search", await _userManager.Users.ToListAsync());
         }
 
         public async Task<IActionResult> Details(int? id)
         {
             //Should return MailMessage object that timestamp is equals given id
-            return View(await _context.User.ToListAsync());
+            return View(await _userManager.Users.ToListAsync());
         }
 
         public async Task<IActionResult> Delete(int? id)
         {
             //Should remove mail from provider's server
-            return View(await _context.User.ToListAsync());
+            return View(await _userManager.Users.ToListAsync());
         }
 
         // GET: MailBox/Create
@@ -56,13 +57,13 @@ namespace JanuszMail.Controllers
             if (ModelState.IsValid)
             {
                 //Should send an email with attaching current time as timestamp
-                await _context.SaveChangesAsync();
+                await _userManager.Users.ToListAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View(mail);
         }
 
         private readonly IProvider _provider;
-        private readonly JanuszMailContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
     }
 }

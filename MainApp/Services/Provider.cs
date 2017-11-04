@@ -3,34 +3,34 @@ using System.Collections.Generic;
 using System.Net.Mail;
 using JanuszMail.Interfaces;
 using JanuszMail.Models;
-using Microsoft.AspNetCore.Http;
+using System.Net;
 
 namespace JanuszMail.Services
 {
     public class Provider : IProvider
     {
         //TODO: Maciej Plewka should fill these implementations
-        public HttpResponse Connect(ProviderParams providerParams)
+        public HttpStatusCode Connect(ProviderParams providerParams)
         {
             throw new NotImplementedException();
         }
 
-        public HttpResponse Disconnect(ProviderParams providerParams)
+        public HttpStatusCode Disconnect(ProviderParams providerParams)
         {
             throw new NotImplementedException();
         }
 
-        public Tuple<IList<string>, HttpResponse> GetFolders()
+        public Tuple<IList<string>, HttpStatusCode> GetFolders()
         {
             throw new NotImplementedException();
         }
 
-        public Tuple<IList<MailMessage>, HttpResponse> GetMailsFromFolder(string folder, int page, int pageSize)
+        public Tuple<IList<MailMessage>, HttpStatusCode> GetMailsFromFolder(string folder, int page, int pageSize)
         {
             throw new NotImplementedException();
         }
 
-        public Tuple<IList<string>, HttpResponse> GetSubjectsFromFolder(string folder, int page, int pageSize)
+        public Tuple<IList<string>, HttpStatusCode> GetSubjectsFromFolder(string folder, int page, int pageSize)
         {
             throw new NotImplementedException();
         }
@@ -40,27 +40,27 @@ namespace JanuszMail.Services
             throw new NotImplementedException();
         }
 
-        public HttpResponse MarkEmailAsRead(MailMessage mailMessage)
+        public HttpStatusCode MarkEmailAsRead(MailMessage mailMessage)
         {
             throw new NotImplementedException();
         }
 
-        public HttpResponse MarkEmailAsUnread(MailMessage mailMessage)
+        public HttpStatusCode MarkEmailAsUnread(MailMessage mailMessage)
         {
             throw new NotImplementedException();
         }
 
-        public HttpResponse MoveEmailToFolder(MailMessage mailMessage, string folder)
+        public HttpStatusCode MoveEmailToFolder(MailMessage mailMessage, string folder)
         {
             throw new NotImplementedException();
         }
 
-        public HttpResponse RemoveEmail(MailMessage mailMessage)
+        public HttpStatusCode RemoveEmail(MailMessage mailMessage)
         {
             throw new NotImplementedException();
         }
 
-        public HttpResponse SendEmail(MailMessage mailMessage)
+        public HttpStatusCode SendEmail(MailMessage mailMessage)
         {
             throw new NotImplementedException();
         }

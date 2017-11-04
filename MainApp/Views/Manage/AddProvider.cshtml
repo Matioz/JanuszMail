@@ -1,0 +1,51 @@
+@model JanuszMail.Models.ProviderParams
+
+@{
+    ViewData["Title"] = "AddProvider";
+}
+
+<h2>Add Provider</h2>
+
+<h4>Provider</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="AddProvider">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="EmailAdress" class="control-label"></label>
+                <input asp-for="EmailAdress" type="email" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="Password" class="control-label"></label>
+                <input asp-for="Password" type="password" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="ImapServerName" class="control-label"></label>
+                <input asp-for="ImapServerName" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="ImapPortNumber" class="control-label"></label>
+                <input asp-for="ImapPortNumber" class="form-control" />
+                <span asp-validation-for="ImapPortNumber" class="Integer"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="SmtpServerName" class="control-label"></label>
+                <input asp-for="SmtpServerName" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="SmtpPortNumber" class="control-label"></label>
+                <input asp-for="SmtpPortNumber" class="form-control" />
+                <span asp-validation-for="SmtpPortNumber" class="Integer"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="AddProvider" class="btn btn-default" />
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

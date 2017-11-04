@@ -5,21 +5,32 @@ using JanuszMail.Models;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using System;
 
 namespace JanuszMail.Controllers
 {
     [Authorize]
     public class MailBoxController : Controller
     {
-        public MailBoxController(IProvider provider, UserManager<ApplicationUser> userManager)
+        public MailBoxController(IProvider provider, UserManager<ApplicationUser> userManager, JanuszMailDbContext dbContext)
         {
             this._provider = provider;
             this._userManager = userManager;
+            this._dbContext = dbContext;
         }
         // GET: MailBox
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             //Should connect to provider if it is not
+
+
+            //Example of getting provider params
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+            var providerParams = _dbContext.ProviderParams.SingleOrDefaultAsync(p => p.User == user);
             return View();
         }
         public async Task<IActionResult> ShowMails(int? page, int? pageSize, string folder, string sortOrder, string subject, string sender)
@@ -65,5 +76,6 @@ namespace JanuszMail.Controllers
 
         private readonly IProvider _provider;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly JanuszMailDbContext _dbContext;
     }
 }

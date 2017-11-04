@@ -21,5 +21,7 @@ namespace JanuszMail.Models.ManageViewModels
         public string PhoneNumber { get; set; }
 
         public string StatusMessage { get; set; }
+
+        public List<ProviderParams> Providers{ get; set; } 
     }
 }

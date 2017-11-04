@@ -1,37 +1,49 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using JanuszMail.Interfaces;
-using JanuszMail.Models;
 using System.Threading.Tasks;
+using JanuszMail.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using System;
+using System.Net;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace JanuszMail.Controllers
 {
     [Authorize]
     public class MailBoxController : Controller
     {
+        private ProviderParams _providerParams;
+        private MailBoxViewModel _mailBoxViewModel;
+
         public MailBoxController(IProvider provider, UserManager<ApplicationUser> userManager, JanuszMailDbContext dbContext)
         {
             this._provider = provider;
             this._userManager = userManager;
             this._dbContext = dbContext;
+            this._mailBoxViewModel = new MailBoxViewModel();
+            
         }
         // GET: MailBox
         public async Task<IActionResult> Index()
         {
             //Should connect to provider if it is not
-
-
             //Example of getting provider params
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
-            var providerParams = _dbContext.ProviderParams.SingleOrDefaultAsync(p => p.UserId == user.Id);
-            return View();
+            var providerParams = _dbContext.ProviderParams.Where(p => p.UserId == user.Id).ToList();
+            _providerParams=providerParams.First();
+            _provider.Connect(_providerParams);
+            Tuple<IList<string>,HttpStatusCode> tp =_provider.GetSubjectsFromFolder("Inbox", 0, 10);
+            _mailBoxViewModel.Subjects = tp.Item1;
+            tp = _provider.GetFolders();
+            _mailBoxViewModel.Folders=tp.Item1;
+            return View(_mailBoxViewModel);
         }
         public async Task<IActionResult> ShowMails(int? page, int? pageSize, string folder, string sortOrder, string subject, string sender)
         {

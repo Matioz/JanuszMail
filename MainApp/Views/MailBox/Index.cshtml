@@ -1,6 +1,28 @@
+@model JanuszMail.Models.MailBoxViewModel
 @{
-    ViewData["Title"] = "Mailbox";
+    ViewData["Title"] = "MailBox";
 }
 
-<h2> E-Mail list under construction...</h2>
-<h4>Please come back later :)</h4>
+<h2>MailBox</h2>
+@foreach (var item in Model.Subjects) {
+    <table class="table">
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item)
+            </td>
+        </tr>
+     </table>
+}
+<br>
+<br>
+<br>
+<br>
+@foreach (var item in Model.Folders) {
+    <table class="table">
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item)
+            </td>
+        </tr>
+     </table>
+}

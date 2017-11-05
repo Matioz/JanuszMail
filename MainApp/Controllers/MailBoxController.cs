@@ -39,7 +39,7 @@ namespace JanuszMail.Controllers
             var providerParams = _dbContext.ProviderParams.Where(p => p.UserId == user.Id).ToList();
             _providerParams=providerParams.First();
             _provider.Connect(_providerParams);
-            Tuple<IList<string>,HttpStatusCode> tp =_provider.GetSubjectsFromFolder("Inbox", 0, 10);
+            Tuple<IList<string>,HttpStatusCode> tp =_provider.GetSubjectsFromFolder("Kosz", 0, 10);
             _mailBoxViewModel.Subjects = tp.Item1;
             tp = _provider.GetFolders();
             _mailBoxViewModel.Folders=tp.Item1;

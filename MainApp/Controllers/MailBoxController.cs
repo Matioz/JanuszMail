@@ -15,7 +15,7 @@ using MailKit.Net.Smtp;
 using MailKit.Search;
 using MailKit;
 using MimeKit;
-
+using PagedList.Core;
 namespace JanuszMail.Controllers
 {
     [Authorize]
@@ -59,18 +59,101 @@ namespace JanuszMail.Controllers
             _mailBoxViewModel.Subjects = new List<string>();
             _mailBoxViewModel.Folders = new List<string>();
             return View(_mailBoxViewModel);
-        
         }
         public async Task<IActionResult> ShowMails(int? page, int? pageSize, string folder, string sortOrder, string subject, string sender)
         {
             //Should return partial view with PagedList of MailMessages that matches to given params
             //When there is no matching messages then should return partial view with error message
-            return PartialView("_Search", await _userManager.Users.ToListAsync());
+            int currentPage = page ?? 1;
+            int currentPageSize = pageSize ?? 25;
+            var mailsTuple = _provider.GetMailsFromFolder(folder, currentPage, currentPageSize);
+            var mails = mailsTuple.Item1.AsQueryable();
+            var httpStatusCode = mailsTuple.Item2;
+
+            if (!httpStatusCode.Equals(HttpStatusCode.OK))
+            {
+                ViewBag.ErrorMessage = "Downloading messages from server failed";
+                return PartialView("_ShowMail");
+            }
+
+            if (!String.IsNullOrEmpty(subject))
+            {
+                mails = mails.Where(mail => mail.Subject.Contains(subject));
+            }
+            if (!String.IsNullOrEmpty(sender))
+            {
+                mails = mails.Where(mail => mail.Sender.Address.Contains(sender) || mail.Sender.DisplayName.Contains(sender));
+            }
+
+            ViewBag.DateSortParam = String.IsNullOrEmpty(sortOrder) ? "Date" : ViewBag.DateSortParam;
+            ViewBag.SubjectSortParam = sortOrder == "Subject" ? "subject_desc" : "Subject";
+            ViewBag.SenderSortParam = sortOrder == "Sender" ? "sender_desc" : "Sender";
+
+            switch (sortOrder)
+            {
+                case "Date":
+                    mails = mails.OrderBy(mail => mail.Date);
+                    break;
+                case "subject_desc":
+                    mails = mails.OrderByDescending(mail => mail.Subject);
+                    break;
+                case "Subject":
+                    mails = mails.OrderBy(mail => mail.Subject);
+                    break;
+                case "sender_desc":
+                    mails = mails.OrderByDescending(mail => mail.Sender);
+                    break;
+                case "Sender":
+                    mails = mails.OrderBy(mail => mail.Sender);
+                    break;
+                default:
+                    mails = mails.OrderByDescending(mail => mail.Date);
+                    break;
+            }
+            
+            var results = mails.ToPagedList(currentPage, currentPageSize);
+
+            if (!results.Any()) 
+            {
+                ViewBag.ErrorMessage = "No messages matching criteria";
+                return PartialView("_ShowMail");
+            }
+            else 
+            {
+                return PartialView("_ShowMail", results);
+            }
         }
 
         public async Task<IActionResult> Details(int? id)
         {
             //Should return MailMessage object that timestamp is equals given id
+
+            if (id == null)
+            {
+                ViewBag.ErrorMessage = "Could not open the message";
+                return View();
+            }
+            var foldersTuple = _provider.GetFolders();
+            var folders = foldersTuple.Item1;
+
+            int page = 1;
+            int pageSize = 50;
+            MimeMessage result;
+            foreach (string folder in folders)
+            {
+                var mailsTuple = _provider.GetMailsFromFolder(folder, page, pageSize);
+                var mails = mailsTuple.Item1;
+                foreach (MimeMessage mail in mails) 
+                {
+                    if (_provider.getUniqueId() == id)
+                    {
+                        return View(result);
+                    }
+                }
+                ViewBag.ErrorMessage = "Could not open the message";
+                return View();
+            }
+
             return View(await _userManager.Users.ToListAsync());
         }
 

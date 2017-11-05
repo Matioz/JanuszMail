@@ -1,0 +1,12 @@
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-flex">
+    <div class="body-content-left">
+        @Html.Partial("_Sidebar")
+    </div>
+    <div class="body-content-right">
+        @RenderBody()
+    </div>
+</div>

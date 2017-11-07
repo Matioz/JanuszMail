@@ -7,7 +7,7 @@ namespace JanuszMail.Models
         public int ID { get; set; }
         [Required]
         [DataType(DataType.EmailAddress)]
-        public string EmailAdress { get; set; }
+        public string EmailAddress { get; set; }
         [Required]
         public string Password { get; set; }
         [Required]
@@ -18,6 +18,7 @@ namespace JanuszMail.Models
         public string SmtpServerName { get; set; }
         [Required]
         public int SmtpPortNumber { get; set; }
+        [Required]
         public string UserId { get; set; }
     }
 }

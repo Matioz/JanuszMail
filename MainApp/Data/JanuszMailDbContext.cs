@@ -1,6 +1,7 @@
+using JanuszMail.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace JanuszMail.Models
+namespace JanuszMail.Data
 {
     public class JanuszMailDbContext : DbContext
     {
@@ -10,5 +11,6 @@ namespace JanuszMail.Models
         }
 
         public DbSet<ProviderParams> ProviderParams { get; set; }
+        public DbSet<Contact> Contact { get; set; }
     }
 }

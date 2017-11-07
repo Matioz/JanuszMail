@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using JanuszMail.Interfaces;
-using System.Threading.Tasks;
+using JanuszMail.Data;
 using JanuszMail.Models;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using System;

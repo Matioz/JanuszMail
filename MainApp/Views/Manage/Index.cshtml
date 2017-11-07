@@ -41,7 +41,7 @@
             @foreach (var item in Model.Providers) {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.EmailAdress)
+                    @Html.DisplayFor(modelItem => item.EmailAddress)
                 </td>
                 <td>
                     <a asp-action="RemoveProvider" asp-route-id="@item.ID">Remove Provider</a>

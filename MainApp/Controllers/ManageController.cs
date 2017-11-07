@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using JanuszMail.Models;
 using JanuszMail.Models.ManageViewModels;
 using JanuszMail.Services;
+using JanuszMail.Data;
 
 namespace JanuszMail.Controllers
 {
@@ -26,7 +27,7 @@ namespace JanuszMail.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
         private readonly UrlEncoder _urlEncoder;
-        private readonly JanuszMail.Models.JanuszMailDbContext _context;
+        private readonly JanuszMailDbContext _context;
 
 
         private const string AuthenicatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
@@ -36,7 +37,7 @@ namespace JanuszMail.Controllers
           SignInManager<ApplicationUser> signInManager,
           IEmailSender emailSender,
           ILogger<ManageController> logger,
-          JanuszMail.Models.JanuszMailDbContext context,
+          JanuszMailDbContext context,
           UrlEncoder urlEncoder)
         {
             _userManager = userManager;
@@ -208,7 +209,8 @@ namespace JanuszMail.Controllers
         {
             Provider _prov = new Provider();
             HttpStatusCode code = _prov.Connect(model);
-            if(code == HttpStatusCode.OK){
+            if (code == HttpStatusCode.OK)
+            {
                 ApplicationUser u = await _userManager.GetUserAsync(User);
                 model.UserId = u.Id;
                 _context.ProviderParams.Add(model);
@@ -216,7 +218,8 @@ namespace JanuszMail.Controllers
                 _prov.Disconnect(model);
                 return RedirectToAction(nameof(Index));
             }
-            else{
+            else
+            {
                 _prov.Disconnect(model);
                 return View(model);
             }
@@ -241,7 +244,7 @@ namespace JanuszMail.Controllers
             var model = new SetPasswordViewModel { StatusMessage = StatusMessage };
             return View(model);
         }
-        
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]

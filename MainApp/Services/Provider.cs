@@ -27,8 +27,8 @@ namespace JanuszMail.Services
                 _imapClient.Connect(providerParams.ImapServerName, providerParams.ImapPortNumber, true);
                 _smtpClient.Connect(providerParams.SmtpServerName, providerParams.SmtpPortNumber, true);
                 _imapClient.AuthenticationMechanisms.Remove("XOAUTH2");
-                _smtpClient.Authenticate(providerParams.EmailAdress, providerParams.Password);
-                _imapClient.Authenticate(providerParams.EmailAdress, providerParams.Password);
+                _smtpClient.Authenticate(providerParams.EmailAddress, providerParams.Password);
+                _imapClient.Authenticate(providerParams.EmailAddress, providerParams.Password);
             }
             catch (Exception exception)
             {

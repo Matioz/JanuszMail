@@ -1,0 +1,13 @@
+@model PagedList.Core.IPagedList<MimeKit.MimeMessage>
+<link href="~/Content/PagedList.css" rel="stylesheet" type="text/css" />
+
+@foreach (var item in Model) {
+    <table class="table">
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Subject)
+            </td>
+        </tr>
+     </table>
+}
+Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount

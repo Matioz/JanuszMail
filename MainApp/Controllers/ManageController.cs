@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -197,11 +198,20 @@ namespace JanuszMail.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddProvider(int id, JanuszMail.Models.ProviderParams model)
         {
-            ApplicationUser u = await _userManager.GetUserAsync(User);
-            model.UserId = u.Id;
-            _context.ProviderParams.Add(model);
-            _context.SaveChanges();
-            return RedirectToAction(nameof(Index));
+            Provider _prov = new Provider();
+            HttpStatusCode code = _prov.Connect(model);
+            if(code == HttpStatusCode.OK){
+                ApplicationUser u = await _userManager.GetUserAsync(User);
+                model.UserId = u.Id;
+                _context.ProviderParams.Add(model);
+                _context.SaveChanges();
+                _prov.Disconnect(model);
+                return RedirectToAction(nameof(Index));
+            }
+            else{
+                _prov.Disconnect(model);
+                return View(model);
+            }
         }
 
         [HttpGet]

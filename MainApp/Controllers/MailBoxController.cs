@@ -30,7 +30,7 @@ namespace JanuszMail.Controllers
             this._userManager = userManager;
             this._dbContext = dbContext;
             this._mailBoxViewModel = new MailBoxViewModel();
-            
+
         }
         // GET: MailBox
         public async Task<IActionResult> Index()
@@ -44,30 +44,26 @@ namespace JanuszMail.Controllers
             }
             var providerParams = _dbContext.ProviderParams.Where(p => p.UserId == user.Id).ToList();
             //here is just tests to list folders get messages from INBOX and sending mail
-            /*_providerParams=providerParams.First();
-            _provider.Connect(_providerParams);
-            Tuple<IList<string>,HttpStatusCode> tp =_provider.GetSubjectsFromFolder("INBOX", 0, 10);
-            _mailBoxViewModel.Subjects = tp.Item1;
-            tp = _provider.GetFolders();
-            _mailBoxViewModel.Folders=tp.Item1;
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("Janusz", "januszmail2137@gmail.com"));
-            message.To.Add(new MailboxAddress("Mrs. Chanandler Bong", "plewkamaciek@gmail.com"));
-            message.Subject = "How you doin'?";
-            message.Body = new TextPart("plain"){ Text = @"Hey" };
-            _provider.SendEmail(message);*/
-            _mailBoxViewModel.Subjects = new List<string>();
-            _mailBoxViewModel.Folders = new List<string>();
-            return View(_mailBoxViewModel);
+            if (providerParams.Any())
+            {
+                _providerParams = providerParams.First();
+                _provider.Connect(_providerParams);
+            }
+            else
+            {
+                ViewBag.ErrorMessage = "You have no provider selected. Go to Manage and add provider.";
+                return View("Error");
+            }
+
+            return View();
         }
-        public async Task<IActionResult> ShowMails(int? page, int? pageSize, string folder, string sortOrder, string subject, string sender)
+        public IActionResult ShowMails(int? page, int? pageSize, string folder, string sortOrder, string subject, string sender)
         {
             //Should return partial view with PagedList of MailMessages that matches to given params
             //When there is no matching messages then should return partial view with error message
             int currentPage = page ?? 1;
             int currentPageSize = pageSize ?? 25;
             var mailsTuple = _provider.GetMailsFromFolder(folder, currentPage, currentPageSize);
-            var mails = mailsTuple.Item1.AsQueryable();
             var httpStatusCode = mailsTuple.Item2;
 
             if (!httpStatusCode.Equals(HttpStatusCode.OK))
@@ -76,13 +72,15 @@ namespace JanuszMail.Controllers
                 return View("Error");
             }
 
+            var mails = mailsTuple.Item1.AsQueryable();
+
             if (!String.IsNullOrEmpty(subject))
             {
                 mails = mails.Where(mail => mail.Subject.Contains(subject));
             }
             if (!String.IsNullOrEmpty(sender))
             {
-                mails = mails.Where(mail => mail.Sender.Address.Contains(sender) || mail.Sender.DisplayName.Contains(sender));
+                mails = mails.Where(mail => mail.Sender.Address.Contains(sender) || mail.Sender.Name.Contains(sender));
             }
 
             ViewBag.DateSortParam = String.IsNullOrEmpty(sortOrder) ? "dateAsc" : ViewBag.DateSortParam;
@@ -110,17 +108,16 @@ namespace JanuszMail.Controllers
                     mails = mails.OrderByDescending(mail => mail.Date);
                     break;
             }
-            
-            var results = mails.ToPagedList(currentPage, currentPageSize);
 
-            if (!results.Any()) 
+            var results = new StaticPagedList<MimeMessage>(mails, currentPage, currentPageSize, 100);
+            if (!results.Any())
             {
                 ViewBag.ErrorMessage = "No messages matching criteria";
                 return View("Error");
             }
-            else 
+            else
             {
-                return PartialView("_ShowMail", results);
+                return View(results);
             }
         }
 

@@ -143,13 +143,13 @@ namespace JanuszMail.Controllers
             {
                 var mailsTuple = _provider.GetMailsFromFolder(folder, page, pageSize);
                 var mails = mailsTuple.Item1;
-                foreach (MimeMessage mail in mails) 
+                /*foreach (MimeMessage mail in mails) 
                 {
                     if (_provider.getUniqueId() == id)
                     {
                         return View(result);
                     }
-                }
+                }*/
                 ViewBag.ErrorMessage = "Could not open the message";
                 return View();
             }

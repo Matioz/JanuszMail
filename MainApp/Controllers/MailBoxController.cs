@@ -10,6 +10,12 @@ using System.Net;
 using System.Collections.Generic;
 using System.Linq;
 
+using MailKit.Net.Imap;
+using MailKit.Net.Smtp;
+using MailKit.Search;
+using MailKit;
+using MimeKit;
+
 namespace JanuszMail.Controllers
 {
     [Authorize]
@@ -37,13 +43,23 @@ namespace JanuszMail.Controllers
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
             var providerParams = _dbContext.ProviderParams.Where(p => p.UserId == user.Id).ToList();
-            _providerParams=providerParams.First();
+            //here is just tests to list folders get messages from INBOX and sending mail
+            /*_providerParams=providerParams.First();
             _provider.Connect(_providerParams);
-            Tuple<IList<string>,HttpStatusCode> tp =_provider.GetSubjectsFromFolder("Kosz", 0, 10);
+            Tuple<IList<string>,HttpStatusCode> tp =_provider.GetSubjectsFromFolder("INBOX", 0, 10);
             _mailBoxViewModel.Subjects = tp.Item1;
             tp = _provider.GetFolders();
             _mailBoxViewModel.Folders=tp.Item1;
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("Janusz", "januszmail2137@gmail.com"));
+            message.To.Add(new MailboxAddress("Mrs. Chanandler Bong", "plewkamaciek@gmail.com"));
+            message.Subject = "How you doin'?";
+            message.Body = new TextPart("plain"){ Text = @"Hey" };
+            _provider.SendEmail(message);*/
+            _mailBoxViewModel.Subjects = new List<string>();
+            _mailBoxViewModel.Folders = new List<string>();
             return View(_mailBoxViewModel);
+        
         }
         public async Task<IActionResult> ShowMails(int? page, int? pageSize, string folder, string sortOrder, string subject, string sender)
         {

@@ -37,13 +37,18 @@
             </div>
             <button type="submit" class="btn btn-default">Save</button>
         </form>
-        @foreach (var item in Model.Providers) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.EmailAdress)
-            </td>
-        </tr>
-}
+        <table class="table">
+            @foreach (var item in Model.Providers) {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.EmailAdress)
+                </td>
+                <td>
+                    <a asp-action="RemoveProvider" asp-route-id="@item.ID">Remove Provider</a>
+                </td>
+            </tr>
+            }
+        </table>
     </div>
 </div>
 

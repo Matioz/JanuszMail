@@ -193,6 +193,14 @@ namespace JanuszMail.Controllers
             var model = new ProviderParams();
             return View(model);
         }
+        [HttpGet]
+        public async Task<IActionResult> RemoveProvider(int? id)
+        {
+            ProviderParams model = _context.ProviderParams.Where(x => x.ID == id).ToList().First();
+            _context.ProviderParams.Remove(model);
+            _context.SaveChanges();
+            return RedirectToAction(nameof(Index));
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -233,6 +241,7 @@ namespace JanuszMail.Controllers
             var model = new SetPasswordViewModel { StatusMessage = StatusMessage };
             return View(model);
         }
+        
 
         [HttpPost]
         [ValidateAntiForgeryToken]

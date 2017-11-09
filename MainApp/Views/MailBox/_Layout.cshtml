@@ -4,7 +4,7 @@
 
 <div class="container-flex">
     <div class="body-content-left">
-        @Html.Partial("_Sidebar")
+        @await Component.InvokeAsync("Sidebar")
     </div>
     <div class="body-content-right">
         @RenderBody()

@@ -41,7 +41,7 @@ namespace JanuszMail
 
             services.AddMvc();
 
-            services.AddSingleton<IProvider, Provider>();
+            services.AddScoped<IProvider, Provider>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

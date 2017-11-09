@@ -17,6 +17,10 @@ namespace JanuszMail.Services
         //TODO: Maciej Plewka should fill these implementations
         private ImapClient _imapClient;
         private MailKit.Net.Smtp.SmtpClient _smtpClient;
+        ~Provider()
+        {
+            Disconnect();
+        }
         public HttpStatusCode Connect(ProviderParams providerParams)
         {
             _imapClient = new ImapClient();
@@ -46,7 +50,7 @@ namespace JanuszMail.Services
             }
         }
 
-        public HttpStatusCode Disconnect(ProviderParams providerParams)
+        public HttpStatusCode Disconnect()
         {
             if (IsConnected())
             {

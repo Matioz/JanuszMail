@@ -215,12 +215,12 @@ namespace JanuszMail.Controllers
                 model.UserId = u.Id;
                 _context.ProviderParams.Add(model);
                 _context.SaveChanges();
-                _prov.Disconnect(model);
+                _prov.Disconnect();
                 return RedirectToAction(nameof(Index));
             }
             else
             {
-                _prov.Disconnect(model);
+                _prov.Disconnect();
                 return View(model);
             }
         }

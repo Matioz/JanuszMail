@@ -33,24 +33,30 @@ namespace JanuszMail.Controllers
             this._mailBoxViewModel = new MailBoxViewModel();
 
         }
-        // GET: MailBox
-        public async Task<IActionResult> Index()
+
+        private async Task<bool> ConnectToProvider()
         {
-            //Should connect to provider if it is not
-            //Example of getting provider params
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
             var providerParams = _dbContext.ProviderParams.Where(p => p.UserId == user.Id).ToList();
-            //here is just tests to list folders get messages from INBOX and sending mail
+
             if (providerParams.Any())
             {
                 _providerParams = providerParams.First();
-                _provider.Connect(_providerParams);
+                var result = _provider.Connect(_providerParams);
+                return result == HttpStatusCode.OK;
             }
-            else
+            return false;
+        }
+
+        // GET: MailBox
+        public async Task<IActionResult> Index()
+        {
+            var connectionStatus = await ConnectToProvider();
+            if (!connectionStatus)
             {
                 ViewBag.ErrorMessage = "You have no provider selected. Go to Manage and add provider.";
                 return View("Error");
@@ -58,13 +64,19 @@ namespace JanuszMail.Controllers
 
             return View();
         }
-        public IActionResult ShowMails(int? page, int? pageSize, string folder, string sortOrder, string subject, string sender)
+        public async Task<IActionResult> ShowMails(int? page, int? pageSize, string folder, string sortOrder, string subject, string sender)
         {
             //Should return partial view with PagedList of MailMessages that matches to given params
             //When there is no matching messages then should return partial view with error message
+            var connectionStatus = await ConnectToProvider();
+            if (!connectionStatus)
+            {
+                ViewBag.ErrorMessage = "Something wrong with connection";
+                return View("Error");
+            }
             int currentPage = page ?? 1;
             int currentPageSize = pageSize ?? 25;
-            var mailsTuple = _provider.GetMailsFromFolder(folder, currentPage, currentPageSize);
+            var mailsTuple = await Task.Run(() => { return _provider.GetMailsFromFolder(folder, currentPage, currentPageSize); });
             var httpStatusCode = mailsTuple.Item2;
 
             if (!httpStatusCode.Equals(HttpStatusCode.OK))

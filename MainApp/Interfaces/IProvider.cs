@@ -23,6 +23,6 @@ namespace JanuszMail.Interfaces
         HttpStatusCode MarkEmailAsRead(MimeMessage mailMessage, string folder);
         HttpStatusCode MarkEmailAsUnread(MimeMessage mailMessage, string folder);
         HttpStatusCode Connect(ProviderParams providerParams);
-        HttpStatusCode Disconnect(ProviderParams providerParams);
+        HttpStatusCode Disconnect();
     }
 }

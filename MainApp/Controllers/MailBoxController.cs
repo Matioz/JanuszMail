@@ -121,8 +121,12 @@ namespace JanuszMail.Controllers
                     mails = mails.OrderByDescending(mail => mail.Date);
                     break;
             }
-
-            var results = new StaticPagedList<MimeMessage>(mails, currentPage, currentPageSize, 100);
+            List<Mail> myMails = new List<Mail>();
+            foreach (var mimeMessage in mails)
+            {
+                myMails.Add((Mail)(mimeMessage));
+            }
+            var results = new StaticPagedList<Mail>(myMails, currentPage, currentPageSize, 100);
             if (!results.Any())
             {
                 ViewBag.ErrorMessage = "No messages matching criteria";

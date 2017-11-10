@@ -33,3 +33,6 @@ msbuild.wrn
 
 # Local database
 MainApp/JanuszMail.db
+
+# Debug results
+UnitTests/debug.*

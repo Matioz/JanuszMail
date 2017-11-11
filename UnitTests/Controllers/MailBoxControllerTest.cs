@@ -43,10 +43,10 @@ namespace UnitTests.Controllers
             mockUserManager.Setup(Manager => Manager.GetUserAsync(It.IsAny<ClaimsPrincipal>())).Returns(Task.FromResult(fakeUser));
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void GivenUserWithoutSelectedProviderWhenCallIndexMethodThenControllerReturnsErrorViewWithNoProviderMessage()
         {
-            SetBadProviderParams();
+            AddProviderParamsToOtherUser();
 
             var viewResult = controller.Index().Result as ViewResult;
             Assert.AreEqual("Error", viewResult.ViewName);
@@ -54,9 +54,10 @@ namespace UnitTests.Controllers
         }
 
         [TestMethod]
-        public void GivenUserWithSelectedProviderWhenCallIndexMethodThenControllerReturnsIndexView()
+        public void GivenUserWithSelectedProviderAndGoodConnectionParamsWhenCallIndexMethodThenControllerReturnsIndexView()
         {
-            SetGoodProviderParams();
+            AddProviderParamsToCurrentUser();
+            SetProviderConnectionResponse(HttpStatusCode.OK);
 
             var viewResult = controller.Index().Result as ViewResult;
             Assert.IsNull(viewResult.ViewName);
@@ -66,8 +67,8 @@ namespace UnitTests.Controllers
         [TestMethod]
         public void GivenProviderWhenConnectMethodReturnsOKThenControllerReturnsIndexView()
         {
-            SetGoodProviderParams();
-            mockProvider.Setup(mock => mock.Connect(It.IsAny<ProviderParams>())).Returns(HttpStatusCode.OK);
+            AddProviderParamsToCurrentUser();
+            SetProviderConnectionResponse(HttpStatusCode.OK);
 
             var viewResult = controller.Index().Result as ViewResult;
             Assert.IsNull(viewResult.ViewName);
@@ -77,8 +78,8 @@ namespace UnitTests.Controllers
         //[TestMethod]
         public void GivenProviderWhenConnectMethodReturnsExpectationFailedThenControllerReturnsErrorViewWithFailedConnectionMessage()
         {
-            SetGoodProviderParams();
-            mockProvider.Setup(mock => mock.Connect(It.IsAny<ProviderParams>())).Returns(HttpStatusCode.ExpectationFailed);
+            AddProviderParamsToCurrentUser();
+            SetProviderConnectionResponse(HttpStatusCode.ExpectationFailed);
 
             var viewResult = controller.Index().Result as ViewResult;
             Assert.AreEqual("Error", viewResult.ViewName);
@@ -91,7 +92,7 @@ namespace UnitTests.Controllers
         [DataRow(3, 3)]
         public void GivenAuthenticatedProviderWithSomeMailsInInboxWhenShowMailsMethodIsCalledThenControllerReturnsViewWithRequestedMessages(int page, int pageSize)
         {
-            SetGoodProviderParams();
+            AddProviderParamsToCurrentUser();
             var mailList = new List<MimeMessage>();
             for (int pageId = 0; pageId < page * 2; pageId++)
             {
@@ -110,7 +111,10 @@ namespace UnitTests.Controllers
                  It.Is<int>(p => p == page), It.Is<int>(ps => ps == pageSize)))
                  .Returns(new Tuple<IList<MimeMessage>, HttpStatusCode>(mailList.Skip(pageSize * (page - 1)).Take(pageSize).ToList(), HttpStatusCode.OK));
 
-            var viewResult = controller.ShowMails(page, pageSize, "inbox", null, null, null) as ViewResult;
+            SetProviderConnectionResponse(HttpStatusCode.OK);
+            SetProviderAuthenticationState(true);
+
+            var viewResult = controller.ShowMails(page, pageSize, "inbox", null, null, null).Result as ViewResult;
             Assert.IsNull(viewResult.ViewName);
             Assert.IsNull(viewResult.ViewData["ErrorMessage"]);
 
@@ -126,7 +130,7 @@ namespace UnitTests.Controllers
 
         }
 
-        private void SetGoodProviderParams()
+        private void AddProviderParamsToCurrentUser()
         {
             var fakeProviderParams = new ProviderParams()
             {
@@ -142,7 +146,7 @@ namespace UnitTests.Controllers
             mockDbContext.SaveChanges();
         }
 
-        private void SetBadProviderParams()
+        private void AddProviderParamsToOtherUser()
         {
             var fakeProviderParams = new ProviderParams()
             {
@@ -156,6 +160,16 @@ namespace UnitTests.Controllers
             };
             mockDbContext.ProviderParams.Add(fakeProviderParams);
             mockDbContext.SaveChanges();
+        }
+
+        private void SetProviderConnectionResponse(HttpStatusCode statusCode)
+        {
+            mockProvider.Setup(mock => mock.Connect(It.IsAny<ProviderParams>())).Returns(statusCode);
+        }
+
+        private void SetProviderAuthenticationState(bool isAuthenticated)
+        {
+            mockProvider.Setup(mock => mock.IsAuthenticated()).Returns(isAuthenticated);
         }
 
 

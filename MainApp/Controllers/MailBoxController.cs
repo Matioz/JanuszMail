@@ -24,6 +24,7 @@ namespace JanuszMail.Controllers
     {
         private ProviderParams _providerParams;
         private MailBoxViewModel _mailBoxViewModel;
+        private string currentFolder;
 
         public MailBoxController(IProvider provider, UserManager<ApplicationUser> userManager, JanuszMailDbContext dbContext)
         {
@@ -121,6 +122,7 @@ namespace JanuszMail.Controllers
                     mails = mails.OrderByDescending(mail => mail.Date);
                     break;
             }
+            currentFolder = folder;
             List<Mail> myMails = mails.ToList();
             var results = new StaticPagedList<Mail>(myMails, currentPage, currentPageSize, 100);
             if (!results.Any())
@@ -130,6 +132,7 @@ namespace JanuszMail.Controllers
             }
             else
             {
+                //_provider.DownloadAttachment("Duda.jpg", myMails.First().ID, currentFolder);
                 return View(results);
             }
         }
@@ -193,6 +196,12 @@ namespace JanuszMail.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return View(mail);
+        }
+        [HttpGet]
+        private async Task<ActionResult> DownloadAttachment(UniqueId id){
+            string fileName = "Duda.jpg";
+            var code = _provider.DownloadAttachment(fileName, id, currentFolder);
+            return View();
         }
 
         private readonly IProvider _provider;

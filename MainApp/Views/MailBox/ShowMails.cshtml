@@ -7,8 +7,17 @@
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Subject)
+                @foreach(var attachment in item.Attachments){
+                    <table class="table">
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(fileName => attachment)
+                                <a asp-action="DownloadAttachment" asp-route-id="@item.ID">Download</a>
+                            </td>
+                        </tr>
+                    </table>
+                }
             </td>
-
             <td>
                 @{
     var envelope =item.IsRead ? "fa-envelope-open" : "fa-envelope";

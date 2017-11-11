@@ -18,11 +18,13 @@ namespace JanuszMail.Interfaces
         Tuple<IList<string>, HttpStatusCode> GetFolders();
         Tuple<IList<string>, HttpStatusCode> GetSubjectsFromFolder(string folder, int page, int pageSize);
         HttpStatusCode SendEmail(MimeMessage mailMessage);
-        HttpStatusCode RemoveEmail(MimeMessage mailMessage, string folder);
-        HttpStatusCode MoveEmailToFolder(MimeMessage mailMessage, string folderSrc, string folderDst);
-        HttpStatusCode MarkEmailAsRead(MimeMessage mailMessage, string folder);
-        HttpStatusCode MarkEmailAsUnread(MimeMessage mailMessage, string folder);
+        HttpStatusCode RemoveEmail(Mail mailMessage, string folder);
+        HttpStatusCode MoveEmailToFolder(Mail mailMessage, string folderSrc, string folderDst);
+        HttpStatusCode MarkEmailAsRead(Mail mailMessage, string folder);
+        HttpStatusCode MarkEmailAsUnread(Mail mailMessage, string folder);
         HttpStatusCode Connect(ProviderParams providerParams);
         HttpStatusCode Disconnect();
+        IList<Tuple<string, string>> GetBasicInfo(string folder, int page, int pageSize);
+        HttpStatusCode DownloadAttachment(string fileName, UniqueId Id, string folderName);
     }
 }

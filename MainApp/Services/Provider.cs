@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 using System.Net.Mail;
 using JanuszMail.Interfaces;
@@ -102,13 +104,13 @@ namespace JanuszMail.Services
             }
             IMailFolder mailFolder = GetFolder(folder);
             mailFolder.Open(FolderAccess.ReadWrite);
-            List<MessageSummary> Items = mailFolder.Fetch((page - 1) * pageSize, pageSize, MessageSummaryItems.UniqueId | MessageSummaryItems.Size | MessageSummaryItems.Flags | MessageSummaryItems.All) as List<MessageSummary>;
+            var Items = mailFolder.Fetch((page - 1) * pageSize, pageSize, MessageSummaryItems.UniqueId | MessageSummaryItems.Size | MessageSummaryItems.Flags | MessageSummaryItems.All);
             List<Mail> Mails = new List<Mail>();
             if(Items == null){
-                Items = new List<MessageSummary>();
+                Items = new List<IMessageSummary>();
             }
-            foreach(MessageSummary mail in Items){
-                Mails.Add(new Mail(mail, mailFolder.GetMessage(mail.UniqueId)));
+            foreach(var mail in Items){
+                Mails.Add(new Mail((MessageSummary)mail, mailFolder.GetMessage(mail.UniqueId), folder));
             }
 
             mailFolder.Close();
@@ -143,7 +145,7 @@ namespace JanuszMail.Services
             return IsConnected() && _imapClient.IsAuthenticated && _smtpClient.IsAuthenticated;
         }
 
-        public HttpStatusCode MarkEmailAsRead(MimeMessage mailMessage, string folder)
+        public HttpStatusCode MarkEmailAsRead(Mail mailMessage, string folder)
         {
             if (!IsAuthenticated())
             {
@@ -153,7 +155,7 @@ namespace JanuszMail.Services
             if (folder != null)
             {
                 mailFolder.Open(FolderAccess.ReadWrite);
-                mailFolder.AddFlags(GetUniqueId(mailMessage, folder), MessageFlags.Seen, true);
+                mailFolder.AddFlags(mailMessage.ID, MessageFlags.Seen, true);
                 mailFolder.Close();
                 return HttpStatusCode.OK;
             }
@@ -163,7 +165,7 @@ namespace JanuszMail.Services
             }
         }
 
-        public HttpStatusCode MarkEmailAsUnread(MimeMessage mailMessage, string folder)
+        public HttpStatusCode MarkEmailAsUnread(Mail mailMessage, string folder)
         {
             if (!IsAuthenticated())
             {
@@ -173,7 +175,7 @@ namespace JanuszMail.Services
             if (mailFolder != null)
             {
                 mailFolder.Open(FolderAccess.ReadWrite);
-                mailFolder.RemoveFlags(GetUniqueId(mailMessage, folder), MessageFlags.Seen, true);
+                mailFolder.RemoveFlags(mailMessage.ID, MessageFlags.Seen, true);
                 mailFolder.Close();
                 return HttpStatusCode.OK;
             }
@@ -183,7 +185,7 @@ namespace JanuszMail.Services
             }
         }
 
-        public HttpStatusCode MoveEmailToFolder(MimeMessage mailMessage, string folderSrc, string folderDst)
+        public HttpStatusCode MoveEmailToFolder(Mail mailMessage, string folderSrc, string folderDst)
         {
             if (!IsAuthenticated())
             {
@@ -193,7 +195,7 @@ namespace JanuszMail.Services
             if (mailFolder != null)
             {
                 mailFolder.Open(FolderAccess.ReadWrite);
-                mailFolder.MoveTo(GetUniqueId(mailMessage, folderSrc), GetFolder(folderDst));
+                mailFolder.MoveTo(mailMessage.ID, GetFolder(folderDst));
                 return HttpStatusCode.OK;
             }
             else
@@ -202,7 +204,7 @@ namespace JanuszMail.Services
             }
         }
 
-        public HttpStatusCode RemoveEmail(MimeMessage mailMessage, string folder)
+        public HttpStatusCode RemoveEmail(Mail mailMessage, string folder)
         {
             if (!IsAuthenticated())
             {
@@ -212,7 +214,7 @@ namespace JanuszMail.Services
             if (mailFolder != null)
             {
                 mailFolder.Open(FolderAccess.ReadWrite);
-                mailFolder.AddFlags(GetUniqueId(mailMessage, folder), MessageFlags.Deleted, true);
+                mailFolder.AddFlags(mailMessage.ID, MessageFlags.Deleted, true);
                 mailFolder.Expunge();
                 mailFolder.Close();
                 return HttpStatusCode.OK;
@@ -283,6 +285,38 @@ namespace JanuszMail.Services
         {
 
             return _imapClient != null && _imapClient.IsConnected && _smtpClient != null && _smtpClient.IsConnected;
+        }
+        public IList<Tuple<string, string>> GetBasicInfo(string folder, int page, int pageSize){
+            List<Tuple<string, string>> Info = new List<Tuple<string, string>>();
+            if (!IsAuthenticated())
+            {
+                return Info;
+            }
+            IMailFolder mailFolder = GetFolder(folder);
+            mailFolder.Open(FolderAccess.ReadWrite);
+            var Items = mailFolder.Fetch((page - 1) * pageSize, pageSize, MessageSummaryItems.UniqueId | MessageSummaryItems.Size | MessageSummaryItems.Flags | MessageSummaryItems.All);
+            if(Items == null){
+                Items = new List<IMessageSummary>();
+            }
+            foreach(var mail in (Items as List<MessageSummary>)){
+                Info.Add(new Tuple<string, string>(mail.NormalizedSubject, mail.Envelope.From[0].Name));
+            }
+
+            mailFolder.Close();
+            return Info;
+        }
+        public HttpStatusCode DownloadAttachment(string fileName, UniqueId Id, string folderName){
+            var folder = GetFolder(folderName);
+            folder.Open(FolderAccess.ReadWrite);
+            var message = folder.GetMessage(Id);
+            var attachment = message.Attachments.Where(x => x.ContentDisposition?.FileName == fileName).ToList().First();
+            //It has to be repleced with Dir chhoser
+            using (var stream = File.Create (fileName)){
+                var part = (MimePart) attachment;
+                part.ContentObject.DecodeTo (stream);
+            }
+            folder.Close();
+            return HttpStatusCode.OK;
         }
     }
 }

@@ -14,7 +14,7 @@ namespace JanuszMail.Interfaces
     public interface IProvider
     {
         bool IsAuthenticated();
-        Tuple<IList<MimeMessage>, HttpStatusCode> GetMailsFromFolder(string folder, int page, int pageSize);
+        Tuple<IList<Mail>, HttpStatusCode> GetMailsFromFolder(string folder, int page, int pageSize);
         Tuple<IList<string>, HttpStatusCode> GetFolders();
         Tuple<IList<string>, HttpStatusCode> GetSubjectsFromFolder(string folder, int page, int pageSize);
         HttpStatusCode SendEmail(MimeMessage mailMessage);

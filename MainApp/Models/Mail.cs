@@ -13,22 +13,23 @@ namespace JanuszMail.Models
         public MailAddress SenderEmail { get; set; }
         public string Subject { get; set; }
         public string Body { get; set; }
+        public string Folder { get; set; }
         public bool IsRead { get; set; }
         public DateTime Date { get; set; }
+        public MailboxAddress Sender { get; set; }
+        public MessageSummary summary { get; set; }
 
-        public static explicit operator Mail(MimeMessage mimeMessage)
+        public Mail(MessageSummary Summary, MimeMessage message)
         {
-            if (mimeMessage == null)
+            if (message == null)
             {
-                throw new System.ArgumentNullException(nameof(mimeMessage));
+                throw new System.ArgumentNullException(nameof(message));
             }
-
-            Mail mail = new Mail();
-            mail.Subject = mimeMessage.Subject;
-            mail.SenderName = mimeMessage.From[0].Name;
-            mail.Date = mimeMessage.Date.Date;
-            mail.IsRead = new Random().Next(100) > 50; // TODO: fix it
-            return mail;
+            this.summary = Summary;
+            this.Subject = message.Subject;
+            this.SenderName = message.From[0].Name;
+            this.Date = message.Date.Date;
+            this.IsRead = summary.Flags.Value.HasFlag(MessageFlags.Seen);
         }
         //TODO: Add property for attachments
     }

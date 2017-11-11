@@ -4,7 +4,7 @@ namespace JanuszMail.Models
 {
     public class MailBoxViewModel
     {
-        public IList<string> Subjects;
+        public IList<Mail> Mails;
         public IList<string> Folders;
     }
 }

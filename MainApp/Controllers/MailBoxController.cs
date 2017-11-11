@@ -121,11 +121,7 @@ namespace JanuszMail.Controllers
                     mails = mails.OrderByDescending(mail => mail.Date);
                     break;
             }
-            List<Mail> myMails = new List<Mail>();
-            foreach (var mimeMessage in mails)
-            {
-                myMails.Add((Mail)(mimeMessage));
-            }
+            List<Mail> myMails = mails.ToList();
             var results = new StaticPagedList<Mail>(myMails, currentPage, currentPageSize, 100);
             if (!results.Any())
             {

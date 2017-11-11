@@ -94,22 +94,25 @@ namespace JanuszMail.Services
             return new Tuple<IList<string>, HttpStatusCode>(Folders, HttpStatusCode.OK);
         }
 
-        public Tuple<IList<MimeMessage>, HttpStatusCode> GetMailsFromFolder(string folder, int page, int pageSize)
+        public Tuple<IList<Mail>, HttpStatusCode> GetMailsFromFolder(string folder, int page, int pageSize)
         {
             if (!IsAuthenticated())
             {
-                return new Tuple<IList<MimeMessage>, HttpStatusCode>(null, HttpStatusCode.ExpectationFailed);
+                return new Tuple<IList<Mail>, HttpStatusCode>(null, HttpStatusCode.ExpectationFailed);
             }
             IMailFolder mailFolder = GetFolder(folder);
             mailFolder.Open(FolderAccess.ReadWrite);
-            IList<MimeMessage> Mails = new List<MimeMessage>();
-            for (int i = (page - 1) * pageSize; i < mailFolder.Count && i < pageSize; i++)
-            {
-                var message = mailFolder.GetMessage(i);
-                Mails.Insert(0, message);
+            List<MessageSummary> Items = mailFolder.Fetch((page - 1) * pageSize, pageSize, MessageSummaryItems.UniqueId | MessageSummaryItems.Size | MessageSummaryItems.Flags | MessageSummaryItems.All) as List<MessageSummary>;
+            List<Mail> Mails = new List<Mail>();
+            if(Items == null){
+                Items = new List<MessageSummary>();
             }
+            foreach(MessageSummary mail in Items){
+                Mails.Add(new Mail(mail, mailFolder.GetMessage(mail.UniqueId)));
+            }
+
             mailFolder.Close();
-            return new Tuple<IList<MimeMessage>, HttpStatusCode>(Mails, HttpStatusCode.OK);
+            return new Tuple<IList<Mail>, HttpStatusCode>(Mails, HttpStatusCode.OK);
         }
 
         public Tuple<IList<string>, HttpStatusCode> GetSubjectsFromFolder(string folder, int page, int pageSize)

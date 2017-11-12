@@ -24,14 +24,15 @@ namespace UnitTests.Controllers
     [TestClass]
     public class MailBoxControllerTest
     {
-
+        SqliteConnection connection;
 
         [TestInitialize]
         public void SetUp()
         {
             mockProvider = new Mock<IProvider>();
-
-            var options = new DbContextOptionsBuilder<JanuszMailDbContext>().UseSqlite(new SqliteConnection("DataSource=:memory")).Options;
+            connection = new SqliteConnection("DataSource=:memory:");
+            connection.Open();
+            var options = new DbContextOptionsBuilder<JanuszMailDbContext>().UseSqlite(connection).Options;
             mockDbContext = new JanuszMailDbContext(options);
             mockDbContext.Database.Migrate();
             mockUserManager = new Mock<FakeUserManager>();
@@ -100,7 +101,7 @@ namespace UnitTests.Controllers
                 {
                     mailList.Add(new Mail()
                     {
-                        ID = new MailKit.UniqueId((uint)pageId * (uint)pageSize + (uint)entryId),
+                        ID = new MailKit.UniqueId(Convert.ToUInt32(pageId) * Convert.ToUInt32(pageSize) + Convert.ToUInt32(entryId) + 1),
                         Date = DateTime.Now.AddDays(-(pageId * pageSize + entryId))
                     });
                 }
@@ -123,9 +124,9 @@ namespace UnitTests.Controllers
             Assert.IsNotNull(receivedModel);
             var receivedMails = (IList<Mail>)(receivedModel.ToList());
             Assert.AreEqual(pageSize, receivedMails.Count);
-            for (int entryId = 0; entryId < pageSize; entryId++)
+            for (int entryId = 1; entryId < pageSize; entryId++)
             {
-                Assert.AreEqual(((page - 1) * pageSize + entryId).ToString(), receivedMails.ElementAt(entryId).ID);
+                Assert.AreEqual(Convert.ToUInt32(page-1) * Convert.ToUInt32(pageSize) + Convert.ToUInt32(entryId) + 1, receivedMails.ElementAt(entryId).ID.Id);
             }
 
         }
@@ -172,7 +173,12 @@ namespace UnitTests.Controllers
             mockProvider.Setup(mock => mock.IsAuthenticated()).Returns(isAuthenticated);
         }
 
-
+        [TestCleanup]
+        public void TearDown()
+        {
+            connection.Close();
+        }
+        
         Mock<IProvider> mockProvider;
         JanuszMailDbContext mockDbContext;
         MailBoxController controller;

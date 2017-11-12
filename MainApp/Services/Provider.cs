@@ -96,6 +96,24 @@ namespace JanuszMail.Services
             return new Tuple<IList<string>, HttpStatusCode>(Folders, HttpStatusCode.OK);
         }
 
+        public Tuple<Mail, HttpStatusCode> GetMailFromFolder(UniqueId id, string folder)
+        {
+            if (!IsAuthenticated())
+            {
+                return new Tuple<Mail, HttpStatusCode>(null, HttpStatusCode.ExpectationFailed);
+            }
+            IMailFolder mailFolder = GetFolder(folder);
+            mailFolder.Open(FolderAccess.ReadWrite);
+            var Items = mailFolder.Fetch(new List<UniqueId>(){id}, MessageSummaryItems.UniqueId | MessageSummaryItems.Size | MessageSummaryItems.Flags | MessageSummaryItems.All);
+            if(Items == null){
+                Items = new List<IMessageSummary>();
+            }
+            Mail mail = new Mail((MessageSummary)Items.First(), mailFolder.GetMessage(Items.First().UniqueId), folder);
+
+            mailFolder.Close();
+            return new Tuple<Mail, HttpStatusCode>(mail, HttpStatusCode.OK);
+        }
+
         public Tuple<IList<Mail>, HttpStatusCode> GetMailsFromFolder(string folder, int page, int pageSize)
         {
             if (!IsAuthenticated())
@@ -206,7 +224,7 @@ namespace JanuszMail.Services
             }
         }
 
-        public HttpStatusCode RemoveEmail(Mail mailMessage, string folder)
+        public HttpStatusCode RemoveEmail(UniqueId id, string folder)
         {
             if (!IsAuthenticated())
             {
@@ -216,7 +234,7 @@ namespace JanuszMail.Services
             if (mailFolder != null)
             {
                 mailFolder.Open(FolderAccess.ReadWrite);
-                mailFolder.AddFlags(mailMessage.ID, MessageFlags.Deleted, true);
+                mailFolder.AddFlags(id, MessageFlags.Deleted, true);
                 mailFolder.Expunge();
                 mailFolder.Close();
                 return HttpStatusCode.OK;

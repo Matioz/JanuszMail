@@ -63,7 +63,8 @@ namespace JanuszMail.Controllers
                 return View("Error");
             }
 
-            return View();
+            //TODO add a smart way of determining folder parameter, one that would at least ignore case
+            return RedirectToAction(nameof(ShowMails), new {folder="INBOX", sortOrder="dateDesc", subject="", sender=""});
         }
         public async Task<IActionResult> ShowMails(int? page, int? pageSize, string folder, string sortOrder, string subject, string sender)
         {
@@ -100,8 +101,6 @@ namespace JanuszMail.Controllers
             }
 
             ViewBag.DateSortParam = String.IsNullOrEmpty(sortOrder) ? "dateAsc" : ViewBag.DateSortParam;
-            ViewBag.SubjectSortParam = sortOrder == "subjectAsc" ? "subjectDesc" : "subjectAsc";
-            ViewBag.SenderSortParam = sortOrder == "senderAsc" ? "senderDesc" : "senderAsc";
             ViewBag.CurrentPageSize = currentPageSize;
             ViewBag.CurrectSortOrder = sortOrder;
 
@@ -109,18 +108,6 @@ namespace JanuszMail.Controllers
             {
                 case "dateAsc":
                     mails = mails.OrderBy(mail => mail.Date);
-                    break;
-                case "subjectDesc":
-                    mails = mails.OrderByDescending(mail => mail.Subject);
-                    break;
-                case "subjectAsc":
-                    mails = mails.OrderBy(mail => mail.Subject);
-                    break;
-                case "senderDesc":
-                    mails = mails.OrderByDescending(mail => mail.Sender);
-                    break;
-                case "senderAsc":
-                    mails = mails.OrderBy(mail => mail.Sender);
                     break;
                 default:
                     mails = mails.OrderByDescending(mail => mail.Date);
@@ -140,14 +127,19 @@ namespace JanuszMail.Controllers
                 return View(results);
             }
         }
-        public async Task<IActionResult> Details(String subject, string folder)
+
+        public async Task<IActionResult> Details(int? id, string folder)
         {
             //Should return MailMessage object that timestamp is equals given id
-
-            if (subject == null)
+            //TODO: add awaits
+            if (id == null)
             {
                 ViewBag.ErrorMessage = "Could not open the message";
-                return View();
+                return View("Error");
+            }
+            if (String.IsNullOrEmpty(folder))
+            {
+                folder = "Inbox";
             }
 
             var connectionStatus = await ConnectToProvider();
@@ -156,54 +148,50 @@ namespace JanuszMail.Controllers
                 ViewBag.ErrorMessage = "You have no provider selected. Go to Manage and add provider.";
                 return View("Error");
             }
-            ViewBag.Folder = folder;
-            ViewBag.ReturnUrlFailing = Url.Action("Details", new { subject = subject, folder = folder });
-            ViewBag.ReturnUrlPassing = Url.Action("ShowMails", new { folder = folder });
 
-            int page = 1;
-            int pageSize = 50;
-            var mailsTuple = _provider.GetMailsFromFolder(folder, page, pageSize);
-            if (mailsTuple.Item2 == HttpStatusCode.OK)
+            var tuple = await Task.Run(() => { return _provider.GetMailFromFolder(new UniqueId(Convert.ToUInt32(id)), folder);});
+            var mail = tuple.Item1;
+            var httpStatusCode = tuple.Item2;
+
+            if (!httpStatusCode.Equals(HttpStatusCode.OK))
             {
-                var mails = mailsTuple.Item1;
-                foreach (var mail in mails)
-                {
-                    if (mail.Subject.Equals(subject))
-                    {
-                        ViewBag.ReplyTo = mail.SenderEmail;
-                        return View(mail);
-                    }
-                }
+                ViewBag.ErrorMessage("Could not open the requested e-mail");
+                return View("Error");
             }
-            ViewBag.ErrorMessage = "Could not open the message";
-            return View();
-
+            else 
+            {
+                ViewBag.Folder = folder;
+                ViewBag.ReturnUrlFailing = Url.Action("Details", new { subject = mail.Subject, folder = folder });
+                ViewBag.ReturnUrlPassing = Url.Action("ShowMails", new { folder = folder });
+                return View();
+            }
         }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int? id, string folder, string returnUrlPassing, string returnUrlFailing)
         {
             if (id == null)
             {
                 if (folder == null || folder.Length == 0)
+                {
                     return Redirect(Url.Action("Index"));
+                }
                 else
                 {
                     ViewBag.ErrorMessage = "Message or value not specified";
                     return Redirect(returnUrlFailing);
                 }
             }
-            Mail mail = new Mail();
-            HttpStatusCode result = await Task.Run(() => { return _provider.RemoveEmail(mail, folder); });
-
-            if (result == HttpStatusCode.OK)
+            if (String.IsNullOrEmpty(folder))
+            {
+                folder = "Inbox";
+            }
+            var statusCode = await Task.Run(() => {return _provider.RemoveEmail(new UniqueId(Convert.ToUInt32(id)), folder);});
+            if (statusCode.Equals(HttpStatusCode.OK))
             {
                 return Redirect(returnUrlPassing);
             }
             else
             {
-                ViewBag.ErrorMessage = "Something wrong with marking message";
+                ViewBag.ErrorMessage = "Could not access e-mail server";
                 return Redirect(returnUrlFailing);
             }
         }
@@ -220,15 +208,22 @@ namespace JanuszMail.Controllers
         // POST: MailBox/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+        [HttpPost, ActionName("Send")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Send([Bind("ID,Recipient,Subject,Body")] Mail mail)
         {
             if (ModelState.IsValid)
             {
-                //Should send an email with attaching current time as timestamp
-                await _userManager.Users.ToListAsync();
-                return RedirectToAction(nameof(Index));
+                HttpStatusCode httpStatusCode = await Task.Run(() => {return _provider.SendEmail(mail.mimeMessage);});
+                if (httpStatusCode.Equals(HttpStatusCode.OK))
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    ViewBag.ErrorMessage("Could not send the message");
+                    return View(mail);
+                }
             }
             return View(mail);
         }

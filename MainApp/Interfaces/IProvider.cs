@@ -14,11 +14,12 @@ namespace JanuszMail.Interfaces
     public interface IProvider
     {
         bool IsAuthenticated();
+        Tuple<Mail, HttpStatusCode> GetMailFromFolder(UniqueId id,  string folder);
         Tuple<IList<Mail>, HttpStatusCode> GetMailsFromFolder(string folder, int page, int pageSize);
         Tuple<IList<string>, HttpStatusCode> GetFolders();
         Tuple<IList<string>, HttpStatusCode> GetSubjectsFromFolder(string folder, int page, int pageSize);
         HttpStatusCode SendEmail(MimeMessage mailMessage);
-        HttpStatusCode RemoveEmail(Mail mailMessage, string folder);
+        HttpStatusCode RemoveEmail(UniqueId id, string folder);
         HttpStatusCode MoveEmailToFolder(Mail mailMessage, string folderSrc, string folderDst);
         HttpStatusCode MarkEmailAsRead(Mail mailMessage, string folder);
         HttpStatusCode MarkEmailAsUnread(Mail mailMessage, string folder);

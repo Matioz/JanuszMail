@@ -64,9 +64,10 @@ namespace UnitTests.Controllers
             AddProviderParamsToCurrentUser();
             SetProviderConnectionResponse(HttpStatusCode.OK);
 
-            var viewResult = controller.Index().Result as ViewResult;
-            Assert.IsNull(viewResult.ViewName);
-            Assert.IsNull(viewResult.ViewData["ErrorMessage"]);
+            var result = controller.Index();
+            Assert.IsInstanceOfType(result.Result, typeof(RedirectToActionResult));
+            var actionResult = (RedirectToActionResult)result.Result;
+            Assert.AreEqual("ShowMails", actionResult.ActionName);
         }
 
         [TestMethod]
@@ -75,9 +76,10 @@ namespace UnitTests.Controllers
             AddProviderParamsToCurrentUser();
             SetProviderConnectionResponse(HttpStatusCode.OK);
 
-            var viewResult = controller.Index().Result as ViewResult;
-            Assert.IsNull(viewResult.ViewName);
-            Assert.IsNull(viewResult.ViewData["ErrorMessage"]);
+            var result = controller.Index();
+            Assert.IsInstanceOfType(result.Result, typeof(RedirectToActionResult));
+            var actionResult = (RedirectToActionResult)result.Result;
+            Assert.AreEqual("ShowMails", actionResult.ActionName);
         }
 
         //[TestMethod]

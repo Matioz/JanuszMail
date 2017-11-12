@@ -11,7 +11,7 @@ namespace JanuszMail.Models
         public UniqueId ID { get; set; }
         public string Recipient { get; set; }
         public string SenderName { get; set; }
-        public MailAddress SenderEmail { get; set; }
+        public string SenderEmail { get; set; }
         public string Subject { get; set; }
         public string Body { get; set; }
         public string Folder { get; set; }
@@ -39,13 +39,16 @@ namespace JanuszMail.Models
             this.mimeMessage = message;
             this.Subject = message.Subject;
             this.SenderName = message.From[0].Name;
+            this.SenderEmail = ((MailboxAddress)message.From[0]).Address;
             this.Date = summary.Date.DateTime;
             this.IsRead = summary.Flags.Value.HasFlag(MessageFlags.Seen);
-            this.Body=message.HtmlBody;
-            this.Attachments=new List<string>();
-            foreach (var attachment in message.Attachments) {
-                if (!(attachment is MessagePart)) {
-                    var part = (MimePart) attachment;
+            this.Body = message.HtmlBody;
+            this.Attachments = new List<string>();
+            foreach (var attachment in message.Attachments)
+            {
+                if (!(attachment is MessagePart))
+                {
+                    var part = (MimePart)attachment;
                     Attachments.Add(part.FileName);
                 }
             }

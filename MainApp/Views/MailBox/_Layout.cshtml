@@ -4,7 +4,7 @@
 
 <div class="container-flex">
     <div class="body-content-left">
-        @await Component.InvokeAsync("Sidebar")
+        @await Component.InvokeAsync("MailFolders", new {viewName="Sidebar"})
     </div>
     <div class="body-content-right">
         @RenderBody()

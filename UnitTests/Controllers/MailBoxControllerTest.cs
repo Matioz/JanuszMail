@@ -42,6 +42,10 @@ namespace UnitTests.Controllers
                 Id = "user1"
             };
             mockUserManager.Setup(Manager => Manager.GetUserAsync(It.IsAny<ClaimsPrincipal>())).Returns(Task.FromResult(fakeUser));
+
+            Mock<IUrlHelper> urlHelper = new Mock<IUrlHelper>();
+            urlHelper.Setup(x => x.Link(It.IsAny<string>(), It.IsAny<object>())).Returns("http://localhost");
+            controller.Url = urlHelper.Object;
         }
 
         [TestMethod]
@@ -179,6 +183,7 @@ namespace UnitTests.Controllers
             connection.Close();
         }
         
+        Mock<IUrlHelper> urlHelper;
         Mock<IProvider> mockProvider;
         JanuszMailDbContext mockDbContext;
         MailBoxController controller;

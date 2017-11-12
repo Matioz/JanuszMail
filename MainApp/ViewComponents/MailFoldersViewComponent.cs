@@ -5,24 +5,24 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace JanuszMail.ViewComponents
 {
-    public class SidebarViewComponent : ViewComponent
+    public class MailFoldersViewComponent : ViewComponent
     {
         private readonly IProvider _provider;
-        public SidebarViewComponent(IProvider provider)
+        public MailFoldersViewComponent(IProvider provider)
         {
             this._provider = provider;
         }
-        public async Task<IViewComponentResult> InvokeAsync()
+        public async Task<IViewComponentResult> InvokeAsync(string viewName)
         {
             if (await Task.Run(() => { return _provider.IsAuthenticated(); }))
             {
                 var folderList = await Task.Run(() => { return _provider.GetFolders(); });
                 if (folderList.Item2 == HttpStatusCode.OK)
                 {
-                    return View(folderList.Item1);
+                    return View(viewName, folderList.Item1);
                 }
             }
-            return View();
+            return View(viewName);
         }
     }
 }

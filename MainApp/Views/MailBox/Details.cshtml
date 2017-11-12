@@ -1,0 +1,40 @@
+@using JanuszMail.Models;
+@model Mail
+<div>
+    <h4>Mail details</h4>
+    <hr />
+    @await Component.InvokeAsync("MailFolders", new {viewName="DetailUtils"})
+
+    <hr />
+    <dl class="dl-horizontal container body-content-left">
+        <dt>
+            From
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.SenderName)
+            @Html.DisplayFor(model => model.SenderEmail)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Date)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Date)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Subject)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Subject)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Body)
+        </dt>
+        <dd>
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    @Html.Raw(Model.Body)
+                </div>
+            </div>
+        </dd>
+    </dl>
+</div>

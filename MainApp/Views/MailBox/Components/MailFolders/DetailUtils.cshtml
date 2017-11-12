@@ -1,0 +1,24 @@
+@model IEnumerable<string>
+<form class="form-inline" asp-controller="MailBox" method="post">
+  <div class="input-group">
+    <input
+    <input type="hidden" name="folder" value="@ViewData["Folder"]"/>
+    <input type="hidden" name="returnUrlPassing" value="@ViewData["ReturnUrlPassing"]"/>
+    <input type="hidden" name="returnUrlFailing" value="@ViewData["ReturnUrlFailing"]"/>
+    <label class="control-label">Select folder</label>
+    <select name="destFolder">
+      @foreach(var item in Model) {
+        <option>@item</option>
+      }
+    </select>
+    <button class="btn btn-warning" type="submit" formaction="MoveToFolder">
+      <strong>Move to folder</strong>
+    </button>
+    <button class="btn btn-danger" type="submit" formaction="Delete">
+      <strong>Delete&nbsp;</strong><span class="fa fa-trash"/>
+    </button>
+    <a class="btn btn-primary" asp-controller="Mailbox" asp-action="Send" asp-route-replyTo="@ViewData["ReplyTo"]">
+      <strong>Reply&nbsp; <span class="fa fa-reply"/></strong>
+    </a>
+  </div>
+</form>

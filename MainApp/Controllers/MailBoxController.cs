@@ -64,7 +64,7 @@ namespace JanuszMail.Controllers
             }
 
             //TODO add a smart way of determining folder parameter, one that would at least ignore case
-            return RedirectToAction(nameof(ShowMails), new {folder="INBOX", sortOrder="dateDesc", subject="", sender=""});
+            return RedirectToAction(nameof(ShowMails), new {folder="INBOX", sortOrder="dateDesc"});
         }
         public async Task<IActionResult> ShowMails(int? page, int? pageSize, string folder, string sortOrder, string subject, string sender)
         {
@@ -145,7 +145,6 @@ namespace JanuszMail.Controllers
         public async Task<IActionResult> Details(uint? id, string folder)
         {
             //Should return MailMessage object that timestamp is equals given id
-            //TODO: add awaits
             if (id == null)
             {
                 ViewBag.ErrorMessage = "Could not open the message";
@@ -181,6 +180,7 @@ namespace JanuszMail.Controllers
                 return View(mail);
             }
         }
+        [HttpPost]
         public async Task<IActionResult> Delete(uint? id, string folder, string returnUrlPassing, string returnUrlFailing)
         {
             if (id == null)

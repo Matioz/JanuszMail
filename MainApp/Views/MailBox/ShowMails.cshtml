@@ -34,6 +34,7 @@
         <tr class="row">
             <td>
                 <form asp-controller="MailBox" method="post">
+                    <input type="hidden" name="id" value="@item.ID.Id"/>
                     <input type="hidden" name="folder" value="@ViewData["Folder"]"/>
                     <input type="hidden" name="returnUrlPassing" value="@ViewData["ReturnUrl"]"/>
                     <input type="hidden" name="returnUrlFailing" value="@ViewData["ReturnUrl"]"/>

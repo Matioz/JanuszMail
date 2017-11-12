@@ -69,6 +69,8 @@ namespace JanuszMail.Controllers
         {
             //Should return partial view with PagedList of MailMessages that matches to given params
             //When there is no matching messages then should return partial view with error message
+            ViewBag.Folder = folder;
+            ViewBag.ReturnUrl = Url.Action("ShowMails", new { page = page, pageSize = pageSize, folder = folder, sortOrder = sortOrder, sender = sender, subject = subject });
             var connectionStatus = await ConnectToProvider();
             if (!connectionStatus)
             {
@@ -100,6 +102,8 @@ namespace JanuszMail.Controllers
             ViewBag.DateSortParam = String.IsNullOrEmpty(sortOrder) ? "dateAsc" : ViewBag.DateSortParam;
             ViewBag.SubjectSortParam = sortOrder == "subjectAsc" ? "subjectDesc" : "subjectAsc";
             ViewBag.SenderSortParam = sortOrder == "senderAsc" ? "senderDesc" : "senderAsc";
+            ViewBag.CurrentPageSize = currentPageSize;
+            ViewBag.CurrectSortOrder = sortOrder;
 
             switch (sortOrder)
             {
@@ -136,50 +140,81 @@ namespace JanuszMail.Controllers
                 return View(results);
             }
         }
-
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(String subject, string folder)
         {
             //Should return MailMessage object that timestamp is equals given id
 
-            if (id == null)
+            if (subject == null)
             {
                 ViewBag.ErrorMessage = "Could not open the message";
                 return View();
             }
-            var foldersTuple = _provider.GetFolders();
-            var folders = foldersTuple.Item1;
+
+            var connectionStatus = await ConnectToProvider();
+            if (!connectionStatus)
+            {
+                ViewBag.ErrorMessage = "You have no provider selected. Go to Manage and add provider.";
+                return View("Error");
+            }
+            ViewBag.Folder = folder;
+            ViewBag.ReturnUrlFailing = Url.Action("Details", new { subject = subject, folder = folder });
+            ViewBag.ReturnUrlPassing = Url.Action("ShowMails", new { folder = folder });
 
             int page = 1;
             int pageSize = 50;
-            MimeMessage result;
-            foreach (string folder in folders)
+            var mailsTuple = _provider.GetMailsFromFolder(folder, page, pageSize);
+            if (mailsTuple.Item2 == HttpStatusCode.OK)
             {
-                var mailsTuple = _provider.GetMailsFromFolder(folder, page, pageSize);
                 var mails = mailsTuple.Item1;
-                /*foreach (MimeMessage mail in mails) 
+                foreach (var mail in mails)
                 {
-                    if (_provider.getUniqueId() == id)
+                    if (mail.Subject.Equals(subject))
                     {
-                        return View(result);
+                        ViewBag.ReplyTo = mail.SenderEmail;
+                        return View(mail);
                     }
-                }*/
-                ViewBag.ErrorMessage = "Could not open the message";
-                return View();
+                }
             }
+            ViewBag.ErrorMessage = "Could not open the message";
+            return View();
 
-            return View(await _userManager.Users.ToListAsync());
         }
 
-        public async Task<IActionResult> Delete(int? id)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int? id, string folder, string returnUrlPassing, string returnUrlFailing)
         {
-            //Should remove mail from provider's server
-            return View(await _userManager.Users.ToListAsync());
+            if (id == null)
+            {
+                if (folder == null || folder.Length == 0)
+                    return Redirect(Url.Action("Index"));
+                else
+                {
+                    ViewBag.ErrorMessage = "Message or value not specified";
+                    return Redirect(returnUrlFailing);
+                }
+            }
+            Mail mail = new Mail();
+            HttpStatusCode result = await Task.Run(() => { return _provider.RemoveEmail(mail, folder); });
+
+            if (result == HttpStatusCode.OK)
+            {
+                return Redirect(returnUrlPassing);
+            }
+            else
+            {
+                ViewBag.ErrorMessage = "Something wrong with marking message";
+                return Redirect(returnUrlFailing);
+            }
         }
 
         // GET: MailBox/Create
-        public IActionResult Send()
+        public IActionResult Send(string replyTo, string folder)
         {
-            return View();
+            ViewBag.Folder = folder;
+            var mail = new Mail();
+            mail.SenderEmail = replyTo;
+            return View(mail);
         }
 
         // POST: MailBox/Create
@@ -198,12 +233,93 @@ namespace JanuszMail.Controllers
             return View(mail);
         }
         [HttpGet]
-        private async Task<ActionResult> DownloadAttachment(UniqueId id){
+        private async Task<ActionResult> DownloadAttachment(UniqueId id)
+        {
             string fileName = "Duda.jpg";
             var code = _provider.DownloadAttachment(fileName, id, currentFolder);
             return View();
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkRead(int? id, string folder, string returnUrlPassing, string returnUrlFailing)
+        {
+            if (id == null)
+            {
+                if (folder == null || folder.Length == 0)
+                    return Redirect(Url.Action("Index"));
+                else
+                {
+                    ViewBag.ErrorMessage = "Message or value not specified";
+                    return Redirect(returnUrlFailing);
+                }
+            }
+            var mail = new Mail();
+            HttpStatusCode result = await Task.Run(() => { return _provider.MarkEmailAsRead(mail, folder); });
+            if (result == HttpStatusCode.OK)
+            {
+                return Redirect(returnUrlPassing);
+            }
+            else
+            {
+                ViewBag.ErrorMessage = "Something wrong with marking message";
+                return Redirect(returnUrlFailing);
+            }
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkUnread(int? id, string folder, string returnUrlPassing, string returnUrlFailing)
+        {
+            if (id == null)
+            {
+                if (folder == null || folder.Length == 0)
+                    return Redirect(Url.Action("Index"));
+                else
+                {
+                    ViewBag.ErrorMessage = "Message or value not specified";
+                    return Redirect(returnUrlFailing);
+                }
+            }
+            var mail = new Mail();
+            HttpStatusCode result = await Task.Run(() => { return _provider.MarkEmailAsUnread(mail, folder); });
 
+            if (result == HttpStatusCode.OK)
+            {
+                return Redirect(returnUrlPassing);
+            }
+            else
+            {
+                ViewBag.ErrorMessage = "Something wrong with marking message";
+                return Redirect(returnUrlFailing);
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MoveToFolder(int? id, string folder, string destFolder, string returnUrlPassing, string returnUrlFailing)
+        {
+            if (id == null)
+            {
+                if (folder == null || folder.Length == 0)
+                    return Redirect(Url.Action("Index"));
+                else
+                {
+                    ViewBag.ErrorMessage = "Message or value not specified";
+                    return Redirect(returnUrlFailing);
+                }
+            }
+            Mail mail = new Mail();
+            HttpStatusCode result = await Task.Run(() => { return _provider.MoveEmailToFolder(mail, folder, destFolder); });
+
+            if (result == HttpStatusCode.OK)
+            {
+                return Redirect(returnUrlPassing);
+            }
+            else
+            {
+                ViewBag.ErrorMessage = "Something wrong with marking message";
+                return Redirect(returnUrlFailing);
+            }
+        }
         private readonly IProvider _provider;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JanuszMailDbContext _dbContext;

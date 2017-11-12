@@ -106,10 +106,12 @@ namespace JanuszMail.Services
             mailFolder.Open(FolderAccess.ReadWrite);
             var Items = mailFolder.Fetch((page - 1) * pageSize, pageSize, MessageSummaryItems.UniqueId | MessageSummaryItems.Size | MessageSummaryItems.Flags | MessageSummaryItems.All);
             List<Mail> Mails = new List<Mail>();
-            if(Items == null){
+            if (Items == null)
+            {
                 Items = new List<IMessageSummary>();
             }
-            foreach(var mail in Items){
+            foreach (var mail in Items)
+            {
                 Mails.Add(new Mail((MessageSummary)mail, mailFolder.GetMessage(mail.UniqueId), folder));
             }
 
@@ -286,7 +288,8 @@ namespace JanuszMail.Services
 
             return _imapClient != null && _imapClient.IsConnected && _smtpClient != null && _smtpClient.IsConnected;
         }
-        public IList<Tuple<string, string>> GetBasicInfo(string folder, int page, int pageSize){
+        public IList<Tuple<string, string>> GetBasicInfo(string folder, int page, int pageSize)
+        {
             List<Tuple<string, string>> Info = new List<Tuple<string, string>>();
             if (!IsAuthenticated())
             {
@@ -295,25 +298,29 @@ namespace JanuszMail.Services
             IMailFolder mailFolder = GetFolder(folder);
             mailFolder.Open(FolderAccess.ReadWrite);
             var Items = mailFolder.Fetch((page - 1) * pageSize, pageSize, MessageSummaryItems.UniqueId | MessageSummaryItems.Size | MessageSummaryItems.Flags | MessageSummaryItems.All);
-            if(Items == null){
+            if (Items == null)
+            {
                 Items = new List<IMessageSummary>();
             }
-            foreach(var mail in (Items as List<MessageSummary>)){
+            foreach (var mail in (Items as List<MessageSummary>))
+            {
                 Info.Add(new Tuple<string, string>(mail.NormalizedSubject, mail.Envelope.From[0].Name));
             }
 
             mailFolder.Close();
             return Info;
         }
-        public HttpStatusCode DownloadAttachment(string fileName, UniqueId Id, string folderName){
+        public HttpStatusCode DownloadAttachment(string fileName, UniqueId Id, string folderName)
+        {
             var folder = GetFolder(folderName);
             folder.Open(FolderAccess.ReadWrite);
             var message = folder.GetMessage(Id);
             var attachment = message.Attachments.Where(x => x.ContentDisposition?.FileName == fileName).ToList().First();
             //It has to be repleced with Dir chhoser
-            using (var stream = File.Create (fileName)){
-                var part = (MimePart) attachment;
-                part.ContentObject.DecodeTo (stream);
+            using (var stream = File.Create(fileName))
+            {
+                var part = (MimePart)attachment;
+                part.ContentObject.DecodeTo(stream);
             }
             folder.Close();
             return HttpStatusCode.OK;

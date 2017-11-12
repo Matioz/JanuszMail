@@ -1,0 +1,47 @@
+<div class="block-inline">
+@{
+    var prevDisabled = Model.PageNumber == 1 ? "disabled" : "";
+    var nextDisabled = Model.PageNumber == Model.PageCount ? "disabled" : "";
+    var currentSortOrder = ViewData["CurrentSortOrder"];
+}
+<a asp-action="ShowMails" 
+    asp-route-sortOrder="@currentSortOrder"
+    asp-route-currentFilter="@ViewData["CurrentFilter"]"
+    asp-route-pageSize="@ViewData["CurrentPageSize"]"
+    asp-route-folder="@ViewData["Folder"]"
+    asp-route-page="1"
+    class="btn btn-default @prevDisabled">
+    First page
+</a>
+<a asp-action="ShowMails" 
+    asp-route-sortOrder="@currentSortOrder"
+    asp-route-currentFilter="@ViewData["CurrentFilter"]"
+    asp-route-pageSize="@ViewData["CurrentPageSize"]"
+    asp-route-folder="@ViewData["Folder"]"
+    asp-route-page="@(Model.PageNumber - 1)"
+    class="btn btn-default @prevDisabled">
+    Previous page
+</a>
+<span class="fa fa-fw"></span>
+@Model.PageNumber/@Model.PageCount
+<span class="fa fa-fw"></span>
+
+<a asp-action="ShowMails" 
+    asp-route-sortOrder="@currentSortOrder"
+    asp-route-currentFilter="@ViewData["CurrentFilter"]"
+    asp-route-pageSize="@ViewData["CurrentPageSize"]"
+    asp-route-folder="@ViewData["Folder"]"
+    asp-route-page="@(Model.PageNumber + 1)"
+    class="btn btn-default @nextDisabled">
+    Next page
+</a>
+<a asp-action="ShowMails" 
+    asp-route-sortOrder="@currentSortOrder"
+    asp-route-currentFilter="@ViewData["CurrentFilter"]"
+    asp-route-pageSize="@ViewData["CurrentPageSize"]"
+    asp-route-folder="@ViewData["Folder"]"
+    asp-route-page="@Model.PageCount"
+    class="btn btn-default @nextDisabled">
+    Last page
+</a>
+</div>

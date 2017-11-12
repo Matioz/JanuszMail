@@ -1,6 +1,9 @@
 @model IList<string>
 <div class="navbar navbar-static-top navbar-default sidebar" role="navigation">
     <div class="sidebar-nav navbar-collapse">
+                <a asp-area="" class="btn-success btn btn-block"  asp-controller="Mailbox" asp-action="Send" asp-route-folder="@ViewData["Folder"]" >
+                    <strong>Create new message</strong>
+                </a>
         <ul class="nav">
             <li class="sidebar-search">
                 <div class="input-group custom-search-form">
@@ -16,8 +19,14 @@
             {
             @foreach (var item in Model) {
                 <li>
-                    <a asp-area="" asp-controller="Mailbox" asp-action="ShowMails" asp-route-folder="@item">
-                        <i class="fa fa-fw"></i> @item
+                    <a asp-area="" asp-controller="Mailbox" asp-action="ShowMails" asp-route-folder="@item" >
+                        <span class="fa fa-fw"></span>
+                        @if (item.Equals(ViewData["Folder"])){
+                            <strong>@item</strong>
+                        }
+                        else{
+                            @item
+                        }
                     </a>
                 </li>
             }

@@ -101,6 +101,8 @@ namespace JanuszMail.Controllers
             }
 
             ViewBag.DateSortParam = String.IsNullOrEmpty(sortOrder) ? "dateAsc" : ViewBag.DateSortParam;
+            ViewBag.SubjectSortParam = sortOrder == "subjectAsc" ? "subjectDesc" : "subjectAsc";
+            ViewBag.SenderSortParam = sortOrder == "senderAsc" ? "senderDesc" : "senderAsc";
             ViewBag.CurrentPageSize = currentPageSize;
             ViewBag.CurrectSortOrder = sortOrder;
 
@@ -108,6 +110,18 @@ namespace JanuszMail.Controllers
             {
                 case "dateAsc":
                     mails = mails.OrderBy(mail => mail.Date);
+                    break;
+                case "subjectDesc":
+                    mails = mails.OrderByDescending(mail => mail.Subject);
+                    break;
+                case "subjectAsc":
+                    mails = mails.OrderBy(mail => mail.Subject);
+                    break;
+                case "senderDesc":
+                    mails = mails.OrderByDescending(mail => mail.Sender);
+                    break;
+                case "senderAsc":
+                    mails = mails.OrderBy(mail => mail.Sender);
                     break;
                 default:
                     mails = mails.OrderByDescending(mail => mail.Date);
@@ -128,7 +142,7 @@ namespace JanuszMail.Controllers
             }
         }
 
-        public async Task<IActionResult> Details(int? id, string folder)
+        public async Task<IActionResult> Details(uint? id, string folder)
         {
             //Should return MailMessage object that timestamp is equals given id
             //TODO: add awaits
@@ -141,6 +155,7 @@ namespace JanuszMail.Controllers
             {
                 folder = "Inbox";
             }
+            uint ID = id ?? 0; //otherwise it won't compile
 
             var connectionStatus = await ConnectToProvider();
             if (!connectionStatus)
@@ -149,7 +164,7 @@ namespace JanuszMail.Controllers
                 return View("Error");
             }
 
-            var tuple = await Task.Run(() => { return _provider.GetMailFromFolder(new UniqueId(Convert.ToUInt32(id)), folder);});
+            var tuple = await Task.Run(() => { return _provider.GetMailFromFolder(new UniqueId(ID), folder);});
             var mail = tuple.Item1;
             var httpStatusCode = tuple.Item2;
 
@@ -161,12 +176,12 @@ namespace JanuszMail.Controllers
             else 
             {
                 ViewBag.Folder = folder;
-                ViewBag.ReturnUrlFailing = Url.Action("Details", new { subject = mail.Subject, folder = folder });
+                ViewBag.ReturnUrlFailing = Url.Action("Details", new { id = mail.ID.Id, folder = folder });
                 ViewBag.ReturnUrlPassing = Url.Action("ShowMails", new { folder = folder });
-                return View();
+                return View(mail);
             }
         }
-        public async Task<IActionResult> Delete(int? id, string folder, string returnUrlPassing, string returnUrlFailing)
+        public async Task<IActionResult> Delete(uint? id, string folder, string returnUrlPassing, string returnUrlFailing)
         {
             if (id == null)
             {
@@ -180,11 +195,12 @@ namespace JanuszMail.Controllers
                     return Redirect(returnUrlFailing);
                 }
             }
+            uint ID = id ?? 0; //otherwise it won't compile
             if (String.IsNullOrEmpty(folder))
             {
                 folder = "Inbox";
             }
-            var statusCode = await Task.Run(() => {return _provider.RemoveEmail(new UniqueId(Convert.ToUInt32(id)), folder);});
+            var statusCode = await Task.Run(() => {return _provider.RemoveEmail(new UniqueId(ID), folder);});
             if (statusCode.Equals(HttpStatusCode.OK))
             {
                 return Redirect(returnUrlPassing);
@@ -236,7 +252,7 @@ namespace JanuszMail.Controllers
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MarkRead(int? id, string folder, string returnUrlPassing, string returnUrlFailing)
+        public async Task<IActionResult> MarkRead(uint? id, string folder, string returnUrlPassing, string returnUrlFailing)
         {
             if (id == null)
             {
@@ -262,7 +278,7 @@ namespace JanuszMail.Controllers
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MarkUnread(int? id, string folder, string returnUrlPassing, string returnUrlFailing)
+        public async Task<IActionResult> MarkUnread(uint? id, string folder, string returnUrlPassing, string returnUrlFailing)
         {
             if (id == null)
             {
@@ -290,7 +306,7 @@ namespace JanuszMail.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MoveToFolder(int? id, string folder, string destFolder, string returnUrlPassing, string returnUrlFailing)
+        public async Task<IActionResult> MoveToFolder(uint? id, string folder, string destFolder, string returnUrlPassing, string returnUrlFailing)
         {
             if (id == null)
             {

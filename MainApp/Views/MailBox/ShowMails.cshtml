@@ -53,7 +53,7 @@
                 </form>
             </td>
             <td>
-                 <a class="btn-block" asp-area="" asp-controller="Mailbox" asp-action="Details" asp-route-subject="@item.Subject" asp-route-folder="@ViewData["Folder"]">
+                 <a class="btn-block" asp-area="" asp-controller="Mailbox" asp-action="Details" asp-route-id="@item.ID.Id" asp-route-folder="@ViewData["Folder"]">
                 @Html.DisplayFor(modelItem => item.Subject)
                     </a>
             </td>

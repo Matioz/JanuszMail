@@ -22,6 +22,11 @@ namespace JanuszMail.Models
         public MimeMessage mimeMessage { get; set; }
         public List<string> Attachments { get; set; }
 
+        public Mail()
+        {
+            this.Body = "Dummy mail";
+        }
+
         public Mail(MessageSummary Summary, MimeMessage message, string folderName)
         {
             if (message == null)

@@ -93,14 +93,14 @@ namespace UnitTests.Controllers
         public void GivenAuthenticatedProviderWithSomeMailsInInboxWhenShowMailsMethodIsCalledThenControllerReturnsViewWithRequestedMessages(int page, int pageSize)
         {
             AddProviderParamsToCurrentUser();
-            var mailList = new List<MimeMessage>();
+            var mailList = new List<Mail>();
             for (int pageId = 0; pageId < page * 2; pageId++)
             {
                 for (int entryId = 0; entryId < pageSize; entryId++)
                 {
-                    mailList.Add(new MimeMessage()
+                    mailList.Add(new Mail()
                     {
-                        MessageId = (pageId * pageSize + entryId).ToString(),
+                        ID = new MailKit.UniqueId((uint)pageId * (uint)pageSize + (uint)entryId),
                         Date = DateTime.Now.AddDays(-(pageId * pageSize + entryId))
                     });
                 }
@@ -109,7 +109,7 @@ namespace UnitTests.Controllers
 
             mockProvider.Setup(mock => mock.GetMailsFromFolder(It.Is<string>(folder => folder.Equals("inbox")),
                  It.Is<int>(p => p == page), It.Is<int>(ps => ps == pageSize)))
-                 .Returns(new Tuple<IList<MimeMessage>, HttpStatusCode>(mailList.Skip(pageSize * (page - 1)).Take(pageSize).ToList(), HttpStatusCode.OK));
+                 .Returns(new Tuple<IList<Mail>, HttpStatusCode>(mailList.Skip(pageSize * (page - 1)).Take(pageSize).ToList(), HttpStatusCode.OK));
 
             SetProviderConnectionResponse(HttpStatusCode.OK);
             SetProviderAuthenticationState(true);
@@ -118,14 +118,14 @@ namespace UnitTests.Controllers
             Assert.IsNull(viewResult.ViewName);
             Assert.IsNull(viewResult.ViewData["ErrorMessage"]);
 
-            Assert.IsInstanceOfType(viewResult.Model, typeof(IPagedList<MimeMessage>));
-            var receivedModel = (IPagedList<MimeMessage>)viewResult.Model;
+            Assert.IsInstanceOfType(viewResult.Model, typeof(IPagedList<Mail>));
+            var receivedModel = (IPagedList<Mail>)viewResult.Model;
             Assert.IsNotNull(receivedModel);
-            var receivedMails = (IList<MimeMessage>)(receivedModel.ToList());
+            var receivedMails = (IList<Mail>)(receivedModel.ToList());
             Assert.AreEqual(pageSize, receivedMails.Count);
             for (int entryId = 0; entryId < pageSize; entryId++)
             {
-                Assert.AreEqual(((page - 1) * pageSize + entryId).ToString(), receivedMails.ElementAt(entryId).MessageId);
+                Assert.AreEqual(((page - 1) * pageSize + entryId).ToString(), receivedMails.ElementAt(entryId).ID);
             }
 
         }

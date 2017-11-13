@@ -7,6 +7,9 @@
         @await Component.InvokeAsync("MailFolders", new {viewName="Sidebar"})
     </div>
     <div class="body-content-right">
+        <h3 class="text-danger">
+            @TempData["ErrorMessage"]
+        </h3>
         @RenderBody()
     </div>
 </div>

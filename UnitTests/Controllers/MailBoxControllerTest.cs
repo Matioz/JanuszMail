@@ -10,7 +10,9 @@ using JanuszMail.Controllers;
 using JanuszMail.Data;
 using JanuszMail.Interfaces;
 using JanuszMail.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -46,6 +48,8 @@ namespace UnitTests.Controllers
             Mock<IUrlHelper> urlHelper = new Mock<IUrlHelper>();
             urlHelper.Setup(x => x.Link(It.IsAny<string>(), It.IsAny<object>())).Returns("http://localhost");
             controller.Url = urlHelper.Object;
+
+            controller.TempData = new TempDataDictionary(new Mock<HttpContext>().Object, new Mock<ITempDataProvider>().Object);
         }
 
         [TestMethod]

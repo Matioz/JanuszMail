@@ -37,6 +37,7 @@ namespace JanuszMail.Controllers
 
         private async Task<bool> ConnectToProvider()
         {
+            System.GC.Collect();
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {

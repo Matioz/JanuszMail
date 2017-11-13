@@ -3,6 +3,9 @@
 <div>
     <h4>Mail details</h4>
     <hr />
+    @{
+        ViewData["Id"]=Model.ID.Id;
+    }
     @await Component.InvokeAsync("MailFolders", new {viewName="DetailUtils"})
 
     <hr />

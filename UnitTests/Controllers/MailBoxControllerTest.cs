@@ -55,7 +55,7 @@ namespace UnitTests.Controllers
 
             var viewResult = controller.Index().Result as ViewResult;
             Assert.AreEqual("Error", viewResult.ViewName);
-            Assert.IsTrue(viewResult.ViewData["ErrorMessage"].ToString().Contains("no provider"));
+            Assert.IsTrue(viewResult.TempData["ErrorMessage"].ToString().Contains("no provider"));
         }
 
         [TestMethod]
@@ -132,7 +132,7 @@ namespace UnitTests.Controllers
             Assert.AreEqual(pageSize, receivedMails.Count);
             for (int entryId = 1; entryId < pageSize; entryId++)
             {
-                Assert.AreEqual(Convert.ToUInt32(page-1) * Convert.ToUInt32(pageSize) + Convert.ToUInt32(entryId) + 1, receivedMails.ElementAt(entryId).ID.Id);
+                Assert.AreEqual(Convert.ToUInt32(page - 1) * Convert.ToUInt32(pageSize) + Convert.ToUInt32(entryId) + 1, receivedMails.ElementAt(entryId).ID.Id);
             }
 
         }
@@ -184,7 +184,7 @@ namespace UnitTests.Controllers
         {
             connection.Close();
         }
-        
+
         Mock<IUrlHelper> urlHelper;
         Mock<IProvider> mockProvider;
         JanuszMailDbContext mockDbContext;

@@ -59,12 +59,12 @@ namespace JanuszMail.Controllers
             var connectionStatus = await ConnectToProvider();
             if (!connectionStatus)
             {
-                ViewBag.ErrorMessage = "You have no provider selected. Go to Manage and add provider.";
+                TempData["ErrorMessage"] = "You have no provider selected. Go to Manage and add provider.";
                 return View("Error");
             }
 
             //TODO add a smart way of determining folder parameter, one that would at least ignore case
-            return RedirectToAction(nameof(ShowMails), new {folder="INBOX", sortOrder="dateDesc"});
+            return RedirectToAction(nameof(ShowMails), new { folder = "INBOX", sortOrder = "dateDesc" });
         }
         public async Task<IActionResult> ShowMails(int? page, int? pageSize, string folder, string sortOrder, string subject, string sender)
         {
@@ -75,7 +75,7 @@ namespace JanuszMail.Controllers
             var connectionStatus = await ConnectToProvider();
             if (!connectionStatus)
             {
-                ViewBag.ErrorMessage = "Something wrong with connection";
+                TempData["ErrorMessage"] = "Something wrong with connection";
                 return View("Error");
             }
             int currentPage = page ?? 1;
@@ -85,7 +85,7 @@ namespace JanuszMail.Controllers
 
             if (!httpStatusCode.Equals(HttpStatusCode.OK))
             {
-                ViewBag.ErrorMessage = "Downloading messages from server failed";
+                TempData["ErrorMessage"] = "Downloading messages from server failed";
                 return View("Error");
             }
 
@@ -132,7 +132,7 @@ namespace JanuszMail.Controllers
             var results = new StaticPagedList<Mail>(myMails, currentPage, currentPageSize, 100);
             if (!results.Any())
             {
-                ViewBag.ErrorMessage = "No messages matching criteria";
+                TempData["ErrorMessage"] = "No messages matching criteria";
                 return View("Error");
             }
             else
@@ -147,7 +147,7 @@ namespace JanuszMail.Controllers
             //Should return MailMessage object that timestamp is equals given id
             if (id == null)
             {
-                ViewBag.ErrorMessage = "Could not open the message";
+                TempData["ErrorMessage"] = "Could not open the message";
                 return View("Error");
             }
             if (String.IsNullOrEmpty(folder))
@@ -159,20 +159,20 @@ namespace JanuszMail.Controllers
             var connectionStatus = await ConnectToProvider();
             if (!connectionStatus)
             {
-                ViewBag.ErrorMessage = "You have no provider selected. Go to Manage and add provider.";
+                TempData["ErrorMessage"] = "You have no provider selected. Go to Manage and add provider.";
                 return View("Error");
             }
 
-            var tuple = await Task.Run(() => { return _provider.GetMailFromFolder(new UniqueId(ID), folder);});
+            var tuple = await Task.Run(() => { return _provider.GetMailFromFolder(new UniqueId(ID), folder); });
             var mail = tuple.Item1;
             var httpStatusCode = tuple.Item2;
 
             if (!httpStatusCode.Equals(HttpStatusCode.OK))
             {
-                ViewBag.ErrorMessage("Could not open the requested e-mail");
+                TempData["ErrorMessage"] = "Could not open the requested e-mail";
                 return View("Error");
             }
-            else 
+            else
             {
                 ViewBag.Folder = folder;
                 ViewBag.ReturnUrlFailing = Url.Action("Details", new { id = mail.ID.Id, folder = folder });
@@ -181,8 +181,16 @@ namespace JanuszMail.Controllers
             }
         }
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(uint? id, string folder, string returnUrlPassing, string returnUrlFailing)
         {
+            var connectionStatus = await ConnectToProvider();
+            if (!connectionStatus)
+            {
+                TempData["ErrorMessage"] = "You have no provider selected. Go to Manage and add provider.";
+                return View("Error");
+            }
+
             if (id == null)
             {
                 if (folder == null || folder.Length == 0)
@@ -191,7 +199,7 @@ namespace JanuszMail.Controllers
                 }
                 else
                 {
-                    ViewBag.ErrorMessage = "Message or value not specified";
+                    TempData["ErrorMessage"] = "Message or value not specified";
                     return Redirect(returnUrlFailing);
                 }
             }
@@ -200,14 +208,14 @@ namespace JanuszMail.Controllers
             {
                 folder = "Inbox";
             }
-            var statusCode = await Task.Run(() => {return _provider.RemoveEmail(new UniqueId(ID), folder);});
+            var statusCode = await Task.Run(() => { return _provider.RemoveEmail(new UniqueId(ID), folder); });
             if (statusCode.Equals(HttpStatusCode.OK))
             {
                 return Redirect(returnUrlPassing);
             }
             else
             {
-                ViewBag.ErrorMessage = "Could not access e-mail server";
+                TempData["ErrorMessage"] = "Could not access e-mail server";
                 return Redirect(returnUrlFailing);
             }
         }
@@ -228,16 +236,23 @@ namespace JanuszMail.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Send([Bind("ID,Recipient,Subject,Body")] Mail mail)
         {
+            var connectionStatus = await ConnectToProvider();
+            if (!connectionStatus)
+            {
+                TempData["ErrorMessage"] = "You have no provider selected. Go to Manage and add provider.";
+                return View("Error");
+            }
+
             if (ModelState.IsValid)
             {
-                HttpStatusCode httpStatusCode = await Task.Run(() => {return _provider.SendEmail(mail.mimeMessage);});
+                HttpStatusCode httpStatusCode = await Task.Run(() => { return _provider.SendEmail(mail.mimeMessage); });
                 if (httpStatusCode.Equals(HttpStatusCode.OK))
                 {
                     return RedirectToAction(nameof(Index));
                 }
                 else
                 {
-                    ViewBag.ErrorMessage("Could not send the message");
+                    TempData["ErrorMessage"] = "Could not send the message";
                     return View(mail);
                 }
             }
@@ -254,13 +269,20 @@ namespace JanuszMail.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkRead(uint? id, string folder, string returnUrlPassing, string returnUrlFailing)
         {
+            var connectionStatus = await ConnectToProvider();
+            if (!connectionStatus)
+            {
+                TempData["ErrorMessage"] = "You have no provider selected. Go to Manage and add provider.";
+                return View("Error");
+            }
+
             if (id == null)
             {
                 if (folder == null || folder.Length == 0)
                     return Redirect(Url.Action("Index"));
                 else
                 {
-                    ViewBag.ErrorMessage = "Message or value not specified";
+                    TempData["ErrorMessage"] = "Message or value not specified";
                     return Redirect(returnUrlFailing);
                 }
             }
@@ -272,7 +294,7 @@ namespace JanuszMail.Controllers
             }
             else
             {
-                ViewBag.ErrorMessage = "Something wrong with marking message";
+                TempData["ErrorMessage"] = "Something wrong with marking message";
                 return Redirect(returnUrlFailing);
             }
         }
@@ -280,13 +302,20 @@ namespace JanuszMail.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkUnread(uint? id, string folder, string returnUrlPassing, string returnUrlFailing)
         {
+            var connectionStatus = await ConnectToProvider();
+            if (!connectionStatus)
+            {
+                TempData["ErrorMessage"] = "You have no provider selected. Go to Manage and add provider.";
+                return View("Error");
+            }
+
             if (id == null)
             {
                 if (folder == null || folder.Length == 0)
                     return Redirect(Url.Action("Index"));
                 else
                 {
-                    ViewBag.ErrorMessage = "Message or value not specified";
+                    TempData["ErrorMessage"] = "Message or value not specified";
                     return Redirect(returnUrlFailing);
                 }
             }
@@ -299,7 +328,7 @@ namespace JanuszMail.Controllers
             }
             else
             {
-                ViewBag.ErrorMessage = "Something wrong with marking message";
+                TempData["ErrorMessage"] = "Something wrong with marking message";
                 return Redirect(returnUrlFailing);
             }
         }
@@ -308,13 +337,20 @@ namespace JanuszMail.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MoveToFolder(uint? id, string folder, string destFolder, string returnUrlPassing, string returnUrlFailing)
         {
+            var connectionStatus = await ConnectToProvider();
+            if (!connectionStatus)
+            {
+                TempData["ErrorMessage"] = "You have no provider selected. Go to Manage and add provider.";
+                return View("Error");
+            }
+
             if (id == null)
             {
                 if (folder == null || folder.Length == 0)
                     return Redirect(Url.Action("Index"));
                 else
                 {
-                    ViewBag.ErrorMessage = "Message or value not specified";
+                    TempData["ErrorMessage"] = "Message or value not specified";
                     return Redirect(returnUrlFailing);
                 }
             }
@@ -327,7 +363,7 @@ namespace JanuszMail.Controllers
             }
             else
             {
-                ViewBag.ErrorMessage = "Something wrong with marking message";
+                TempData["ErrorMessage"] = "Something wrong with marking message";
                 return Redirect(returnUrlFailing);
             }
         }

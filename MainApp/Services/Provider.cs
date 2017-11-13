@@ -19,6 +19,8 @@ namespace JanuszMail.Services
         //TODO: Maciej Plewka should fill these implementations
         private ImapClient _imapClient;
         private MailKit.Net.Smtp.SmtpClient _smtpClient;
+        private string _currentFolder;
+        private IEnumerable<IMessageSummary> _currentFolderSummary;
         ~Provider()
         {
             Disconnect();
@@ -44,6 +46,7 @@ namespace JanuszMail.Services
 
             if (_imapClient.IsConnected && _smtpClient.IsConnected)
             {
+                _currentFolder = "";
                 return HttpStatusCode.OK;
             }
             else
@@ -104,8 +107,9 @@ namespace JanuszMail.Services
             }
             IMailFolder mailFolder = GetFolder(folder);
             mailFolder.Open(FolderAccess.ReadWrite);
-            var Items = mailFolder.Fetch(new List<UniqueId>(){id}, MessageSummaryItems.UniqueId | MessageSummaryItems.Size | MessageSummaryItems.Flags | MessageSummaryItems.All);
-            if(Items == null){
+            var Items = mailFolder.Fetch(new List<UniqueId>() { id }, MessageSummaryItems.UniqueId | MessageSummaryItems.Size | MessageSummaryItems.Flags | MessageSummaryItems.All);
+            if (Items == null)
+            {
                 Items = new List<IMessageSummary>();
             }
             Mail mail = new Mail((MessageSummary)Items.First(), mailFolder.GetMessage(Items.First().UniqueId), folder);
@@ -114,21 +118,45 @@ namespace JanuszMail.Services
             return new Tuple<Mail, HttpStatusCode>(mail, HttpStatusCode.OK);
         }
 
-        public Tuple<IList<Mail>, HttpStatusCode> GetMailsFromFolder(string folder, int page, int pageSize)
+        public Tuple<IList<Mail>, HttpStatusCode> GetMailsFromFolder(string folder, int page, int pageSize, string sortOrder)
         {
             if (!IsAuthenticated())
             {
                 return new Tuple<IList<Mail>, HttpStatusCode>(null, HttpStatusCode.ExpectationFailed);
             }
+            if (folder != _currentFolder)
+            {
+                reloadMessages(folder);
+            }
+            List<Mail> Mails = new List<Mail>();
+            if (_currentFolderSummary == null)
+            {
+                _currentFolderSummary = new List<IMessageSummary>();
+            }
+            switch (sortOrder)
+            {
+                case "dateAsc":
+                    _currentFolderSummary = _currentFolderSummary.OrderBy(mail => mail.Date.DateTime);
+                    break;
+                case "subjectDesc":
+                    _currentFolderSummary = _currentFolderSummary.OrderByDescending(mail => mail.NormalizedSubject);
+                    break;
+                case "subjectAsc":
+                    _currentFolderSummary = _currentFolderSummary.OrderBy(mail => mail.NormalizedSubject);
+                    break;
+                case "senderDesc":
+                    _currentFolderSummary = _currentFolderSummary.OrderByDescending(mail => mail.Envelope.From[0]);
+                    break;
+                case "senderAsc":
+                    _currentFolderSummary = _currentFolderSummary.OrderBy(mail => mail.Envelope.From[0]);
+                    break;
+                default:
+                    _currentFolderSummary = _currentFolderSummary.OrderByDescending(mail => mail.Date.DateTime);
+                    break;
+            }
             IMailFolder mailFolder = GetFolder(folder);
             mailFolder.Open(FolderAccess.ReadWrite);
-            var Items = mailFolder.Fetch((page - 1) * pageSize, pageSize, MessageSummaryItems.UniqueId | MessageSummaryItems.Size | MessageSummaryItems.Flags | MessageSummaryItems.All);
-            List<Mail> Mails = new List<Mail>();
-            if (Items == null)
-            {
-                Items = new List<IMessageSummary>();
-            }
-            foreach (var mail in Items)
+            foreach (var mail in _currentFolderSummary.Skip((page - 1) * pageSize).Take(pageSize))
             {
                 Mails.Add(new Mail((MessageSummary)mail, mailFolder.GetMessage(mail.UniqueId), folder));
             }
@@ -254,7 +282,7 @@ namespace JanuszMail.Services
             _smtpClient.Send(mailMessage);
             return HttpStatusCode.OK;
         }
-        private IMailFolder GetFolder(string name)
+        public IMailFolder GetFolder(string name)
         {
             IMailFolder mailFolder = null;
             var personal = _imapClient.GetFolder(_imapClient.PersonalNamespaces[0]);
@@ -342,6 +370,13 @@ namespace JanuszMail.Services
             }
             folder.Close();
             return HttpStatusCode.OK;
+        }
+        public void reloadMessages(string folder)
+        {
+            IMailFolder mailFolder = GetFolder(folder);
+            mailFolder.Open(FolderAccess.ReadWrite);
+            _currentFolderSummary = mailFolder.Fetch(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Flags | MessageSummaryItems.Envelope);
+            mailFolder.Close();
         }
     }
 }

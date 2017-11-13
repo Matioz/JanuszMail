@@ -10,6 +10,7 @@ using JanuszMail.Controllers;
 using JanuszMail.Data;
 using JanuszMail.Interfaces;
 using JanuszMail.Models;
+using MailKit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -119,13 +120,17 @@ namespace UnitTests.Controllers
 
 
             mockProvider.Setup(mock => mock.GetMailsFromFolder(It.Is<string>(folder => folder.Equals("inbox")),
-                 It.Is<int>(p => p == page), It.Is<int>(ps => ps == pageSize)))
+                 It.Is<int>(p => p == page), It.Is<int>(ps => ps == pageSize), It.Is<string>(sortOder => sortOder.Equals("dateAsc"))))
                  .Returns(new Tuple<IList<Mail>, HttpStatusCode>(mailList.Skip(pageSize * (page - 1)).Take(pageSize).ToList(), HttpStatusCode.OK));
+            var mockMailFolder = new Mock<IMailFolder>();
+            mockMailFolder.Setup(mock => mock.Count).Returns(pageSize);
+            mockProvider.Setup(mock => mock.GetFolder(It.Is<string>(name => name.Equals("inbox")))).Returns(mockMailFolder.Object);
+
 
             SetProviderConnectionResponse(HttpStatusCode.OK);
             SetProviderAuthenticationState(true);
 
-            var viewResult = controller.ShowMails(page, pageSize, "inbox", null, null, null).Result as ViewResult;
+            var viewResult = controller.ShowMails(page, pageSize, "inbox", "dateAsc", null, null).Result as ViewResult;
             Assert.IsNull(viewResult.ViewName);
             Assert.IsNull(viewResult.ViewData["ErrorMessage"]);
 

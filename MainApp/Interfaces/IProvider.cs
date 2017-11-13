@@ -14,8 +14,8 @@ namespace JanuszMail.Interfaces
     public interface IProvider
     {
         bool IsAuthenticated();
-        Tuple<Mail, HttpStatusCode> GetMailFromFolder(UniqueId id,  string folder);
-        Tuple<IList<Mail>, HttpStatusCode> GetMailsFromFolder(string folder, int page, int pageSize);
+        Tuple<Mail, HttpStatusCode> GetMailFromFolder(UniqueId id, string folder);
+        Tuple<IList<Mail>, HttpStatusCode> GetMailsFromFolder(string folder, int page, int pageSize, string sortOrder);
         Tuple<IList<string>, HttpStatusCode> GetFolders();
         Tuple<IList<string>, HttpStatusCode> GetSubjectsFromFolder(string folder, int page, int pageSize);
         HttpStatusCode SendEmail(MimeMessage mailMessage);
@@ -27,5 +27,6 @@ namespace JanuszMail.Interfaces
         HttpStatusCode Disconnect();
         IList<Tuple<string, string>> GetBasicInfo(string folder, int page, int pageSize);
         HttpStatusCode DownloadAttachment(string fileName, UniqueId Id, string folderName);
+        IMailFolder GetFolder(string name);
     }
 }

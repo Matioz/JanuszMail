@@ -1,7 +1,7 @@
 @model IEnumerable<string>
 <form class="form-inline" asp-controller="MailBox" method="post">
   <div class="input-group">
-    <input type="hidden" name="id" value="model.ID.Id"/>
+    <input type="hidden" name="id" value="@ViewData["Id"]"/>
     <input type="hidden" name="folder" value="@ViewData["Folder"]"/>
     <input type="hidden" name="returnUrlPassing" value="@ViewData["ReturnUrlPassing"]"/>
     <input type="hidden" name="returnUrlFailing" value="@ViewData["ReturnUrlFailing"]"/>

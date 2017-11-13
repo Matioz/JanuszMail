@@ -81,7 +81,7 @@ namespace JanuszMail.Controllers
             }
             int currentPage = page ?? 1;
             int currentPageSize = pageSize ?? 25;
-            var mailsTuple = await Task.Run(() => { return _provider.GetMailsFromFolder(folder, currentPage, currentPageSize); });
+            var mailsTuple = await Task.Run(() => { return _provider.GetMailsFromFolder(folder, currentPage, currentPageSize, sortOrder); });
             var httpStatusCode = mailsTuple.Item2;
 
             if (!httpStatusCode.Equals(HttpStatusCode.OK))
@@ -107,30 +107,9 @@ namespace JanuszMail.Controllers
             ViewBag.CurrentPageSize = currentPageSize;
             ViewBag.CurrectSortOrder = sortOrder;
 
-            switch (sortOrder)
-            {
-                case "dateAsc":
-                    mails = mails.OrderBy(mail => mail.Date);
-                    break;
-                case "subjectDesc":
-                    mails = mails.OrderByDescending(mail => mail.Subject);
-                    break;
-                case "subjectAsc":
-                    mails = mails.OrderBy(mail => mail.Subject);
-                    break;
-                case "senderDesc":
-                    mails = mails.OrderByDescending(mail => mail.Sender);
-                    break;
-                case "senderAsc":
-                    mails = mails.OrderBy(mail => mail.Sender);
-                    break;
-                default:
-                    mails = mails.OrderByDescending(mail => mail.Date);
-                    break;
-            }
             currentFolder = folder;
             List<Mail> myMails = mails.ToList();
-            var results = new StaticPagedList<Mail>(myMails, currentPage, currentPageSize, 100);
+            var results = new StaticPagedList<Mail>(myMails, currentPage, currentPageSize, _provider.GetFolder(currentFolder).Count);
             if (!results.Any())
             {
                 TempData["ErrorMessage"] = "No messages matching criteria";

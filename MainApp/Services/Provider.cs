@@ -193,27 +193,7 @@ namespace JanuszMail.Services
             return IsConnected() && _imapClient.IsAuthenticated && _smtpClient.IsAuthenticated;
         }
 
-        public HttpStatusCode MarkEmailAsRead(Mail mailMessage, string folder)
-        {
-            if (!IsAuthenticated())
-            {
-                return HttpStatusCode.ExpectationFailed;
-            }
-            IMailFolder mailFolder = GetFolder(folder);
-            if (folder != null)
-            {
-                mailFolder.Open(FolderAccess.ReadWrite);
-                mailFolder.AddFlags(mailMessage.ID, MessageFlags.Seen, true);
-                mailFolder.Close();
-                return HttpStatusCode.OK;
-            }
-            else
-            {
-                return HttpStatusCode.InternalServerError;
-            }
-        }
-
-        public HttpStatusCode MarkEmailAsUnread(Mail mailMessage, string folder)
+        public HttpStatusCode MarkEmailAsRead(UniqueId id, string folder)
         {
             if (!IsAuthenticated())
             {
@@ -223,7 +203,27 @@ namespace JanuszMail.Services
             if (mailFolder != null)
             {
                 mailFolder.Open(FolderAccess.ReadWrite);
-                mailFolder.RemoveFlags(mailMessage.ID, MessageFlags.Seen, true);
+                mailFolder.AddFlags(id, MessageFlags.Seen, true);
+                mailFolder.Close();
+                return HttpStatusCode.OK;
+            }
+            else
+            {
+                return HttpStatusCode.InternalServerError;
+            }
+        }
+
+        public HttpStatusCode MarkEmailAsUnread(UniqueId id, string folder)
+        {
+            if (!IsAuthenticated())
+            {
+                return HttpStatusCode.ExpectationFailed;
+            }
+            IMailFolder mailFolder = GetFolder(folder);
+            if (mailFolder != null)
+            {
+                mailFolder.Open(FolderAccess.ReadWrite);
+                mailFolder.RemoveFlags(id, MessageFlags.Seen, true);
                 mailFolder.Close();
                 return HttpStatusCode.OK;
             }

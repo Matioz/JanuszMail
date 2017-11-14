@@ -1,5 +1,6 @@
 @using JanuszMail.Models;
 @model Mail
+<Cache vary-by-query="id" vary-by-user="true">
 <div>
     <h4>Mail details</h4>
     <hr />
@@ -41,3 +42,5 @@
         </dd>
     </dl>
 </div>
+Generated at: @DateTime.Now
+</Cache>

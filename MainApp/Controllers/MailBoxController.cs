@@ -144,6 +144,7 @@ namespace JanuszMail.Controllers
             }
 
             var tuple = await Task.Run(() => { return _provider.GetMailFromFolder(new UniqueId(ID), folder); });
+            var markReadTask = Task.Run(() => _provider.MarkEmailAsRead(new UniqueId(ID), folder));
             var mail = tuple.Item1;
             var httpStatusCode = tuple.Item2;
 
@@ -157,6 +158,7 @@ namespace JanuszMail.Controllers
                 ViewBag.Folder = folder;
                 ViewBag.ReturnUrlFailing = Url.Action("Details", new { id = mail.ID.Id, folder = folder });
                 ViewBag.ReturnUrlPassing = Url.Action("ShowMails", new { folder = folder });
+                await markReadTask;
                 return View(mail);
             }
         }
@@ -271,8 +273,7 @@ namespace JanuszMail.Controllers
                     return Redirect(returnUrlFailing);
                 }
             }
-            var mail = new Mail();
-            HttpStatusCode result = await Task.Run(() => { return _provider.MarkEmailAsRead(mail, folder); });
+            HttpStatusCode result = await Task.Run(() => { return _provider.MarkEmailAsRead(new UniqueId(id ?? 0), folder); });
             if (result == HttpStatusCode.OK)
             {
                 return Redirect(returnUrlPassing);
@@ -304,8 +305,7 @@ namespace JanuszMail.Controllers
                     return Redirect(returnUrlFailing);
                 }
             }
-            var mail = new Mail();
-            HttpStatusCode result = await Task.Run(() => { return _provider.MarkEmailAsUnread(mail, folder); });
+            HttpStatusCode result = await Task.Run(() => { return _provider.MarkEmailAsUnread(new UniqueId(id ?? 0), folder); });
 
             if (result == HttpStatusCode.OK)
             {

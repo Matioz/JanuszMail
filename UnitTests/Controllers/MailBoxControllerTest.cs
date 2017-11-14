@@ -146,6 +146,29 @@ namespace UnitTests.Controllers
 
         }
 
+        [TestMethod]
+        public void GivenMailMessageWhenDetailsMethodIsCalledThenMailMessageIsSetToRead()
+        {
+            AddProviderParamsToCurrentUser();
+            SetProviderConnectionResponse(HttpStatusCode.OK);
+
+            var mail = new Mail();
+            mail.IsRead = false;
+
+            mockProvider.Setup(mock => mock.GetMailFromFolder(It.IsAny<UniqueId>(), It.IsAny<string>())).
+            Returns(new Tuple<Mail, HttpStatusCode>(mail, HttpStatusCode.OK));
+            mockProvider.Setup(mock => mock.MarkEmailAsRead(It.IsAny<UniqueId>(), It.IsAny<string>())).
+            Callback(() => mail.IsRead = true);
+
+
+            var viewResult = controller.Details(1, "any").Result as ViewResult;
+            Assert.IsNull(viewResult.ViewName);
+
+            Assert.IsInstanceOfType(viewResult.Model, typeof(Mail));
+            Assert.AreEqual(mail, viewResult.Model);
+            Assert.IsTrue(((Mail)viewResult.Model).IsRead);
+        }
+
         private void AddProviderParamsToCurrentUser()
         {
             var fakeProviderParams = new ProviderParams()

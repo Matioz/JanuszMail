@@ -21,8 +21,8 @@ namespace JanuszMail.Interfaces
         HttpStatusCode SendEmail(MimeMessage mailMessage);
         HttpStatusCode RemoveEmail(UniqueId id, string folder);
         HttpStatusCode MoveEmailToFolder(Mail mailMessage, string folderSrc, string folderDst);
-        HttpStatusCode MarkEmailAsRead(Mail mailMessage, string folder);
-        HttpStatusCode MarkEmailAsUnread(Mail mailMessage, string folder);
+        HttpStatusCode MarkEmailAsRead(UniqueId id, string folder);
+        HttpStatusCode MarkEmailAsUnread(UniqueId id, string folder);
         HttpStatusCode Connect(ProviderParams providerParams);
         HttpStatusCode Disconnect();
         IList<Tuple<string, string>> GetBasicInfo(string folder, int page, int pageSize);

@@ -6,6 +6,7 @@
     <hr />
     @{
         ViewData["Id"]=Model.ID.Id;
+        ViewData["ReplyTo"]=Model.SenderEmail;
     }
     @await Component.InvokeAsync("MailFolders", new {viewName="DetailUtils"})
 

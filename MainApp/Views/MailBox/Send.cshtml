@@ -1,0 +1,40 @@
+@using JanuszMail.Models;
+@model Mail
+
+<h4>Create mail</h4>
+<hr />
+<form asp-controller="MailBox" method="post">
+    <div class="row">
+        <div class="col-md-4">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="ID" />
+            <div class="form-group">
+                <label asp-for="Recipient" class="control-label"></label>
+                <input asp-for="Recipient" class="form-control" />
+                <span asp-validation-for="Recipient" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Subject" class="control-label"></label>
+                <input asp-for="Subject" class="form-control" />
+                <span asp-validation-for="Subject" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label asp-for="Body" class="control-label"></label>
+        <textarea id="richTextArea" asp-for="Body" class="form-control" >></textarea>
+        <span asp-validation-for="Body" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-info" formaction="Send">Send</button>
+        <button type="submit" class="btn btn-warning" formaction="SaveDraft">Save as draft</button>
+    </div>
+</form>
+<script> tinymce.init({
+    selector: '#richTextArea',
+    plugins: ["emoticons", "autolink"],
+    menubar: false,
+    toolbar: 'emoticons | undo redo |  formatselect | bold italic backcolor  | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat',
+    branding: false
+});
+</script>

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using JanuszMail.Interfaces;
@@ -22,7 +23,7 @@ namespace JanuszMail.ViewComponents
                     return View(viewName, folderList.Item1);
                 }
             }
-            return View(viewName);
+            return View(viewName, new List<string>());
         }
     }
 }

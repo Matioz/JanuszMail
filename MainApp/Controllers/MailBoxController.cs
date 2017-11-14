@@ -201,11 +201,16 @@ namespace JanuszMail.Controllers
         }
 
         // GET: MailBox/Create
-        public IActionResult Send(string replyTo, string folder)
+        public async Task<IActionResult> Send(string replyTo)
         {
-            ViewBag.Folder = folder;
+            var connectionStatus = await ConnectToProvider();
+            if (!connectionStatus)
+            {
+                ViewBag.ErrorMessage = "Something wrong with connection";
+                return View("Error");
+            }
             var mail = new Mail();
-            mail.SenderEmail = replyTo;
+            mail.Recipient = replyTo;
             return View(mail);
         }
 

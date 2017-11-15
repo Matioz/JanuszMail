@@ -339,8 +339,7 @@ namespace JanuszMail.Controllers
                     return Redirect(returnUrlFailing);
                 }
             }
-            Mail mail = new Mail();
-            HttpStatusCode result = await Task.Run(() => { return _provider.MoveEmailToFolder(mail, folder, destFolder); });
+            HttpStatusCode result = await Task.Run(() => { return _provider.MoveEmailToFolder(new UniqueId(id ?? 0), folder, destFolder); });
 
             if (result == HttpStatusCode.OK)
             {

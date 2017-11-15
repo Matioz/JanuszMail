@@ -233,7 +233,7 @@ namespace JanuszMail.Services
             }
         }
 
-        public HttpStatusCode MoveEmailToFolder(Mail mailMessage, string folderSrc, string folderDst)
+        public HttpStatusCode MoveEmailToFolder(UniqueId id, string folderSrc, string folderDst)
         {
             if (!IsAuthenticated())
             {
@@ -243,7 +243,7 @@ namespace JanuszMail.Services
             if (mailFolder != null)
             {
                 mailFolder.Open(FolderAccess.ReadWrite);
-                mailFolder.MoveTo(mailMessage.ID, GetFolder(folderDst));
+                mailFolder.MoveTo(id, GetFolder(folderDst));
                 return HttpStatusCode.OK;
             }
             else

@@ -20,7 +20,7 @@ namespace JanuszMail.Interfaces
         Tuple<IList<string>, HttpStatusCode> GetSubjectsFromFolder(string folder, int page, int pageSize);
         HttpStatusCode SendEmail(MimeMessage mailMessage);
         HttpStatusCode RemoveEmail(UniqueId id, string folder);
-        HttpStatusCode MoveEmailToFolder(Mail mailMessage, string folderSrc, string folderDst);
+        HttpStatusCode MoveEmailToFolder(UniqueId id, string folderSrc, string folderDst);
         HttpStatusCode MarkEmailAsRead(UniqueId id, string folder);
         HttpStatusCode MarkEmailAsUnread(UniqueId id, string folder);
         HttpStatusCode Connect(ProviderParams providerParams);

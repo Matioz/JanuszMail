@@ -46,7 +46,7 @@ namespace UnitTests.Controllers
             };
             mockUserManager.Setup(Manager => Manager.GetUserAsync(It.IsAny<ClaimsPrincipal>())).Returns(Task.FromResult(fakeUser));
 
-            Mock<IUrlHelper> urlHelper = new Mock<IUrlHelper>();
+            urlHelper = new Mock<IUrlHelper>();
             urlHelper.Setup(x => x.Link(It.IsAny<string>(), It.IsAny<object>())).Returns("http://localhost");
             controller.Url = urlHelper.Object;
 
@@ -167,6 +167,30 @@ namespace UnitTests.Controllers
             Assert.IsInstanceOfType(viewResult.Model, typeof(Mail));
             Assert.AreEqual(mail, viewResult.Model);
             Assert.IsTrue(((Mail)viewResult.Model).IsRead);
+        }
+
+        [TestMethod]
+        public void GivenMailMessageWhenMoveToFolderMethodIsCalledThenMailMessageIsMovedToGivenFolder()
+        {
+            AddProviderParamsToCurrentUser();
+            SetProviderConnectionResponse(HttpStatusCode.OK);
+
+            string srcFolder = "srcFolder";
+            string destFolder = "destFolder";
+            string returnUrlPassing = "passing";
+            string returnUrlFailing = "failing";
+
+            var mail = new Mail();
+            mail.Folder = srcFolder;
+
+            mockProvider.Setup(mock => mock.GetMailFromFolder(It.IsAny<UniqueId>(), It.IsAny<string>())).
+            Returns(new Tuple<Mail, HttpStatusCode>(mail, HttpStatusCode.OK));
+            mockProvider.Setup(mock => mock.MoveEmailToFolder(It.IsAny<UniqueId>(), It.IsAny<string>(), It.IsAny<string>())).
+            Callback<UniqueId, string, string>((id, sFolder, dFolder) => mail.Folder = dFolder).Returns(HttpStatusCode.OK);
+
+            var result = controller.MoveToFolder(1, srcFolder, destFolder, returnUrlPassing, returnUrlFailing).Result as RedirectResult;
+            Assert.AreEqual(returnUrlPassing, result.Url);
+            Assert.AreEqual(destFolder, mail.Folder);
         }
 
         private void AddProviderParamsToCurrentUser()

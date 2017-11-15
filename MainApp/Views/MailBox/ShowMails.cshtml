@@ -1,7 +1,6 @@
 
 @using JanuszMail.Models;
 @model PagedList.Core.IPagedList<Mail>
-<Cache vary-by-query="page,pageSize,sortOrder,folder" vary-by-user="true">
     <h3>@ViewBag.Folder</h3>
     <table class="table table-striped table-hover panel panel-default">
         <tr class="row">
@@ -76,7 +75,4 @@
         </tr>
 }
      </table>
-    Generated at: @DateTime.Now
-</Cache>
-
 @Html.Partial("_Pager")

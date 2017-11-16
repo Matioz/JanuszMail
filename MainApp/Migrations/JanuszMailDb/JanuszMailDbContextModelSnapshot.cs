@@ -28,11 +28,9 @@ namespace JanuszMail.Migrations.JanuszMailDb
 
                     b.Property<string>("Name");
 
-                    b.Property<int>("ProviderID");
+                    b.Property<string>("UserId");
 
                     b.HasKey("ID");
-
-                    b.HasIndex("ProviderID");
 
                     b.ToTable("Contact");
                 });
@@ -64,14 +62,6 @@ namespace JanuszMail.Migrations.JanuszMailDb
                     b.HasKey("ID");
 
                     b.ToTable("ProviderParams");
-                });
-
-            modelBuilder.Entity("JanuszMail.Models.Contact", b =>
-                {
-                    b.HasOne("JanuszMail.Models.ProviderParams", "Provider")
-                        .WithMany()
-                        .HasForeignKey("ProviderID")
-                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

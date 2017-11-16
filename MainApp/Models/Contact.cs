@@ -7,8 +7,8 @@ namespace JanuszMail.Models
         public int ID { get; set; }
         public string Name { get; set; }
         [Required]
+        [DataType(DataType.EmailAddress)]
         public string EmailAddress { get; set; }
-        [Required]
-        public ProviderParams Provider { get; set; }
+        public string UserId { get; set; }
     }
 }

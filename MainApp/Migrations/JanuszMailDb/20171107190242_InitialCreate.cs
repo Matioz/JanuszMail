@@ -35,23 +35,12 @@ namespace JanuszMail.Migrations.JanuszMailDb
                         .Annotation("Sqlite:Autoincrement", true),
                     EmailAddress = table.Column<string>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: true),
-                    ProviderID = table.Column<int>(type: "INTEGER", nullable: false)
+                    UserId = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Contact", x => x.ID);
-                    table.ForeignKey(
-                        name: "FK_Contact_ProviderParams_ProviderID",
-                        column: x => x.ProviderID,
-                        principalTable: "ProviderParams",
-                        principalColumn: "ID",
-                        onDelete: ReferentialAction.Cascade);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Contact_ProviderID",
-                table: "Contact",
-                column: "ProviderID");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

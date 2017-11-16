@@ -1,0 +1,49 @@
+@model IEnumerable<JanuszMail.Models.Contact>
+
+@{
+    ViewData["Title"] = "Contacts";
+}
+
+<h2>Contacts</h2>
+<hr />
+@if (Model != null && Model.Any()) {
+<table class="table">
+    <thead>
+        <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.Name)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.EmailAddress)
+                </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                <a asp-controller="MailBox" asp-action="Send" asp-route-replyTo="@item.EmailAddress">
+                    @item.EmailAddress
+                </a>
+            </td>
+            <td>
+                <a class="btn btn-warning" asp-action="Edit" asp-route-id="@item.ID">Edit</a>
+                <a class="btn btn-info" asp-action="Details" asp-route-id="@item.ID">Details</a>
+                <a class="btn btn-danger" asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+}
+else {
+    <h4>You have no contacts yet.</h4>
+}
+<br/>
+<p>
+    <a asp-action="Create" class="btn btn-success">Add new contact</a>
+</p>

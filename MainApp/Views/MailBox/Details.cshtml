@@ -40,5 +40,15 @@
                 </div>
             </div>
         </dd>
+        @foreach(var attachment in Model.Attachments) {
+            <table class="table">
+                <tr>
+                    <td>
+                        @Html.DisplayFor(fileName => attachment)
+                        <a asp-controller="MailBox" asp-action="DownloadAttachment" asp-route-id="@Model.ID" asp-route-fileName="@attachment" asp-route-folder="@Model.Folder">Download</a>
+                    </td>
+                </tr>
+            </table>
+        }
     </dl>
 </div>

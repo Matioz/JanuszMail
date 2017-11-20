@@ -287,12 +287,22 @@ namespace JanuszMail.Controllers
             }
             return View(mail);
         }
-        [HttpGet]
-        private async Task<ActionResult> DownloadAttachment(UniqueId id)
+        [HttpGet, ActionName("DownloadAttachment")]
+        public async Task<ActionResult> DownloadAttachment(int id, string fileName, string folder)
         {
-            string fileName = "Duda.jpg";
-            var code = _provider.DownloadAttachment(fileName, id, currentFolder);
-            return View();
+            var connectionStatus = await ConnectToProvider();
+            var code = _provider.DownloadAttachment(fileName, new UniqueId((uint)id), folder);
+            if (!System.IO.File.Exists(fileName))
+            {
+                //return HttpStatusCode.ExpectationFailed;
+            }
+            var fileBytes = System.IO.File.ReadAllBytes(fileName);
+            var response = new FileContentResult(fileBytes, "application/octet-stream")
+            {
+                FileDownloadName = fileName
+            };
+            System.IO.File.Delete(fileName);
+            return response;
         }
         [HttpPost]
         [ValidateAntiForgeryToken]

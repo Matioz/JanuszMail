@@ -184,22 +184,37 @@ namespace JanuszMail.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> AddProvider()
+        public async Task<IActionResult> UpdateSignature()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
-            var model = new ProviderParams();
-            return View(model);
+            return View(model: user.Signature);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateSignature(string signature)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            user.Signature = signature;
+            await _userManager.UpdateAsync(user);
+
+            return RedirectToAction(nameof(Index));
+        }
+        [HttpGet]
+        public IActionResult AddProvider()
+        {
+            return View();
         }
         [HttpGet]
         public async Task<IActionResult> RemoveProvider(int? id)
         {
-            ProviderParams model = _context.ProviderParams.Where(x => x.ID == id).ToList().First();
+            ProviderParams model = await Task.Run(() => { return _context.ProviderParams.Where(x => x.ID == id).ToList().First(); });
             _context.ProviderParams.Remove(model);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

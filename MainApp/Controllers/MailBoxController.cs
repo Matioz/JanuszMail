@@ -206,6 +206,11 @@ namespace JanuszMail.Controllers
         public async Task<IActionResult> Send(string replyTo)
         {
             var connectionStatus = await ConnectToProvider();
+            if (!connectionStatus)
+            {
+                TempData["ErrorMessage"] = "You have no provider selected. Go to Manage and add provider.";
+                return View("Error");
+            }
             var getSignatureTask = Task.Run(async () =>
             {
                 var user = await _userManager.GetUserAsync(User);
@@ -215,13 +220,11 @@ namespace JanuszMail.Controllers
                 }
                 return "";
             });
-            if (!connectionStatus)
-            {
-                ViewBag.ErrorMessage = "Something wrong with connection";
-                return View("Error");
-            }
             var mail = new Mail();
-            mail.Recipient = replyTo;
+            if (!String.IsNullOrEmpty(replyTo))
+            {
+                mail.Recipient = replyTo;
+            }
             mail.Body = await getSignatureTask;
             return View(mail);
         }
@@ -239,9 +242,13 @@ namespace JanuszMail.Controllers
                 TempData["ErrorMessage"] = "You have no provider selected. Go to Manage and add provider.";
                 return View("Error");
             }
-
             if (ModelState.IsValid)
             {
+                mail.mimeMessage = new MimeMessage();
+                mail.mimeMessage.From.Add(new MailboxAddress(_providerParams.EmailAddress));
+                mail.mimeMessage.To.Add(new MailboxAddress(mail.Recipient));
+                mail.mimeMessage.Subject = mail.Subject;
+                mail.mimeMessage.Body = new TextPart("html") { Text = mail.Body };
                 HttpStatusCode httpStatusCode = await Task.Run(() => { return _provider.SendEmail(mail.mimeMessage); });
                 if (httpStatusCode.Equals(HttpStatusCode.OK))
                 {

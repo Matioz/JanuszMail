@@ -3,6 +3,7 @@ using System.Net.Mail;
 using System.Collections.Generic;
 using MailKit;
 using MimeKit;
+using Microsoft.AspNetCore.Http;
 
 namespace JanuszMail.Models
 {
@@ -20,7 +21,8 @@ namespace JanuszMail.Models
         public MailboxAddress Sender { get; set; }
         public MessageSummary summary { get; set; }
         public MimeMessage mimeMessage { get; set; }
-        public List<string> Attachments { get; set; }
+        public List<IFormFile> Attachments { get; set; }
+        public List<string> AttachmentFileNames { get; set; }
 
         public Mail()
         {
@@ -43,13 +45,14 @@ namespace JanuszMail.Models
             this.Date = summary.Date.DateTime;
             this.IsRead = summary.Flags.Value.HasFlag(MessageFlags.Seen);
             this.Body = message.HtmlBody;
-            this.Attachments = new List<string>();
+            this.Attachments = new List<IFormFile>();
+            this.AttachmentFileNames = new List<string>();
             foreach (var attachment in message.Attachments)
             {
                 if (!(attachment is MessagePart))
                 {
                     var part = (MimePart)attachment;
-                    Attachments.Add(part.FileName);
+                    AttachmentFileNames.Add(part.FileName);
                 }
             }
         }

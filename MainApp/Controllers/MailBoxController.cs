@@ -10,6 +10,7 @@ using System;
 using System.Net;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 
 using MailKit.Net.Imap;
 using MailKit.Net.Smtp;
@@ -229,12 +230,39 @@ namespace JanuszMail.Controllers
             return View(mail);
         }
 
+        private async Task<MimeMessage> ConstructMimeMessage(Mail mail)
+        {
+            var builder = new BodyBuilder();
+            var mimeMessage = new MimeMessage();
+            mimeMessage.From.Add(new MailboxAddress(_providerParams.EmailAddress));
+            mimeMessage.To.Add(new MailboxAddress(mail.Recipient));
+            mimeMessage.Subject = mail.Subject;
+
+            foreach (var attachment in mail.Attachments)
+            {
+                var tempPath = Path.GetTempPath();
+                if (attachment.Length > 0)
+                {
+                    var filePath = Path.Combine(tempPath, attachment.FileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await attachment.CopyToAsync(stream);
+                    }
+                    builder.Attachments.Add(filePath);
+                    System.IO.File.Delete(filePath);
+                }
+            }
+            builder.HtmlBody = mail.Body;
+            mimeMessage.Body = builder.ToMessageBody();
+            return mimeMessage;
+        }
+
         // POST: MailBox/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost, ActionName("Send")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Send([Bind("ID,Recipient,Subject,Body")] Mail mail)
+        public async Task<IActionResult> Send([Bind("ID,Recipient,Subject,Attachments,Body")] Mail mail)
         {
             var connectionStatus = await ConnectToProvider();
             if (!connectionStatus)
@@ -244,11 +272,8 @@ namespace JanuszMail.Controllers
             }
             if (ModelState.IsValid)
             {
-                mail.mimeMessage = new MimeMessage();
-                mail.mimeMessage.From.Add(new MailboxAddress(_providerParams.EmailAddress));
-                mail.mimeMessage.To.Add(new MailboxAddress(mail.Recipient));
-                mail.mimeMessage.Subject = mail.Subject;
-                mail.mimeMessage.Body = new TextPart("html") { Text = mail.Body };
+                mail.mimeMessage = await ConstructMimeMessage(mail);
+
                 HttpStatusCode httpStatusCode = await Task.Run(() => { return _provider.SendEmail(mail.mimeMessage); });
                 if (httpStatusCode.Equals(HttpStatusCode.OK))
                 {

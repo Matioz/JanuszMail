@@ -4,12 +4,38 @@
 
 <div class="container-flex">
     <div class="body-content-left">
-        @await Component.InvokeAsync("MailFolders", new {viewName="Sidebar"})
+        @await Component.InvokeAsync("MailFolders", new {viewName="SidebarAsync"})
     </div>
     <div class="body-content-right">
         <h3 class="text-danger">
             @TempData["ErrorMessage"]
         </h3>
-        @RenderBody()
+        <div id="MailList">
+            @RenderBody()
+        </div>
     </div>
 </div>
+
+@section mailboxScripts {
+<script>
+$(document).ready(function () {
+    $(".nav-folder").click(function (event) {
+
+        $.ajax({
+            url: 'MailBox/ShowMails',
+            data: { folder: $(this).attr("folder-name") },
+            type: 'GET',
+            ajaxSend: $('#MailList').html('<div class="text-center block"><img src="images/ajax-loader.gif" alt="Loading mails"/></div>'),
+            success: 
+                function (data) {
+                $('#MailList').html(data); 
+            },
+            error: function (obj) {
+                alert('Something happened');
+            }
+        });
+    });
+
+});
+</script>
+}

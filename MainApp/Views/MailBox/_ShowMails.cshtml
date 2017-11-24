@@ -1,0 +1,117 @@
+
+@using JanuszMail.Models;
+@model PagedList.Core.IPagedList<MailHeader>
+    <h3>@ViewBag.Folder</h3>
+    @if(Model.Count == 0) {
+        <h3>No mails to display</h3>
+    }
+    else{
+    <table class="table table-striped table-hover panel panel-default">
+        <tr class="row">
+            <th class="col-md-1 col-sm-1 col-lg-1">
+            </th>
+            <th class="col-md-7 col-sm-7 col-lg-7">
+                 <a class="btn-block allow-partial" asp-area="" asp-controller="Mailbox" asp-action="ShowMails"
+                    asp-route-page="@Model.PageNumber"
+                    asp-route-pageSize="@Model.PageSize"
+                    asp-route-folder="@ViewBag.Folder"
+                    asp-route-sortOrder="@ViewBag.SubjectSortParam"
+                    >
+                    @Html.DisplayNameFor(model => model[0].Subject)
+                </a>
+            </th>
+            <th class="col-md-2 col-sm-2 col-lg-2">
+                 <a class="btn-block allow-partial" asp-area="" asp-controller="Mailbox" asp-action="ShowMails"
+                    asp-route-page="@Model.PageNumber"
+                    asp-route-pageSize="@Model.PageSize"
+                    asp-route-folder="@ViewBag.Folder"
+                    asp-route-sortOrder="@ViewBag.SenderSortParam"
+                    >
+                    Sender
+                </a>
+            </th>
+            <th class="col-md-2 col-sm-2 col-lg-2">
+                 <a class="btn-block allow-partial" asp-area="" asp-controller="Mailbox" asp-action="ShowMails"
+                    asp-route-page="@Model.PageNumber"
+                    asp-route-pageSize="@Model.PageSize"
+                    asp-route-folder="@ViewBag.Folder"
+                    asp-route-sortOrder="@ViewBag.DateSortParam"
+                    >
+                    @Html.DisplayNameFor(model => model[0].Date.Date)
+                </a>
+            </th>
+        </tr>
+@foreach (var item in Model) {
+        <tr class="row">
+            <td>
+                @await Component.InvokeAsync("MailManagement", new {isMailRead=@item.IsRead, mailId=@item.ID, folder=@ViewData["Folder"]})
+            </td>
+            <td>
+                 <a class="btn-block allow-partial" asp-area="" asp-controller="Mailbox" asp-action="Details" asp-route-id="@item.ID" asp-route-folder="@ViewData["Folder"]">
+                @Html.DisplayFor(modelItem => item.Subject)
+                    </a>
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SenderName)
+                @Html.DisplayFor(modelItem => item.SenderEmail)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Date)
+            </td>
+        </tr>
+}
+     </table>
+@Html.Partial("_Pager")
+<script>
+    $("a.allow-partial").click(function (event) {
+        event.preventDefault();
+        $.ajax({
+            url: $(this).attr("href"),
+            type: 'GET',
+            ajaxSend: $('#MailList').html('<div class="text-center block"><img src="images/ajax-loader.gif" alt="Loading"/></div>'),
+            success:
+                function (data) {
+                $('#MailList').html(data);
+            },
+            error: function (obj) {
+                alert('Something happened');
+            }
+        });
+    });
+    $("a.async-form").click(function (event) {
+        event.preventDefault();
+        var element = $(this);
+        var url = element.attr("href");
+        if(url.indexOf("Delete")>=0){
+            element.parentsUntil("tbody").addClass("to-remove");
+            element.parentsUntil("table").remove(".to-remove");
+        } else if(url.indexOf("MarkRead")>=0){
+            element.attr("href", url.replace("MarkRead", "MarkUnread"));
+            element.removeClass("btn-warning");
+            element.addClass("btn-info");
+            element.children().removeClass("fa-envelope");
+            element.children().addClass("fa-envelope-open");
+        } else if(url.indexOf("MarkUnread")>=0){
+            element.attr("href", url.replace("MarkUnread", "MarkRead"));
+            element.addClass("btn-warning");
+            element.removeClass("btn-info");
+            element.children().removeClass("fa-envelope-open");
+            element.children().addClass("fa-envelope");
+        }
+        $.ajax({
+            url: url,
+            contentType: "application/json",
+            type: 'POST',
+            success:
+                function (data) {
+                if(data == false){
+                    alert("Something went wrong");
+                }
+            },
+            error: function (obj) {
+                alert('Something happened');
+            }
+        });
+    });
+</script>
+    }

@@ -89,7 +89,7 @@
 
 .body-content-left {
     order: 0;
-    flex-grow: 1;
+    flex-grow: 0;
     margin-left: -15px;
     padding-right: 0px;
 }

@@ -10,7 +10,7 @@
     asp-route-pageSize="@ViewData["CurrentPageSize"]"
     asp-route-folder="@ViewData["Folder"]"
     asp-route-page="1"
-    class="btn btn-default @prevDisabled">
+    class="btn btn-default @prevDisabled allow-partial">
     First page
 </a>
 <a asp-action="ShowMails" 
@@ -19,7 +19,7 @@
     asp-route-pageSize="@ViewData["CurrentPageSize"]"
     asp-route-folder="@ViewData["Folder"]"
     asp-route-page="@(Model.PageNumber - 1)"
-    class="btn btn-default @prevDisabled">
+    class="btn btn-default @prevDisabled allow-partial">
     Previous page
 </a>
 <span class="fa fa-fw"></span>
@@ -32,7 +32,7 @@
     asp-route-pageSize="@ViewData["CurrentPageSize"]"
     asp-route-folder="@ViewData["Folder"]"
     asp-route-page="@(Model.PageNumber + 1)"
-    class="btn btn-default @nextDisabled">
+    class="btn btn-default @nextDisabled allow-partial">
     Next page
 </a>
 <a asp-action="ShowMails" 
@@ -41,7 +41,7 @@
     asp-route-pageSize="@ViewData["CurrentPageSize"]"
     asp-route-folder="@ViewData["Folder"]"
     asp-route-page="@Model.PageCount"
-    class="btn btn-default @nextDisabled">
+    class="btn btn-default @nextDisabled allow-partial">
     Last page
 </a>
 </div>

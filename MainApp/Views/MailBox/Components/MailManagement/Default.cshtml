@@ -1,0 +1,12 @@
+<a asp-controller="MailBox" asp-action="Delete" 
+    asp-route-id="@ViewData["mailId"]"
+    asp-route-folder="@ViewData["folder"]"
+    class="btn btn-danger async-form">
+    <span class="fa fa-trash"></span>
+</a>
+<a asp-controller="MailBox" asp-action="@ViewData["markAction"]" 
+    asp-route-id="@ViewData["mailId"]"
+    asp-route-folder="@ViewData["folder"]"
+    class="btn @ViewData["buttonClass"] async-form">
+    <span class="fa @ViewData["envelopeClass"]"></span>
+</a>

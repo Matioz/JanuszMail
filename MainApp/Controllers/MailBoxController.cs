@@ -206,6 +206,15 @@ namespace JanuszMail.Controllers
         public async Task<IActionResult> Send(string replyTo)
         {
             var connectionStatus = await ConnectToProvider();
+            var getSignatureTask = Task.Run(async () =>
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user.Signature != null && user.Signature.Length != 0)
+                {
+                    return "<br/><br/><br/>" + user.Signature;
+                }
+                return "";
+            });
             if (!connectionStatus)
             {
                 ViewBag.ErrorMessage = "Something wrong with connection";
@@ -213,6 +222,7 @@ namespace JanuszMail.Controllers
             }
             var mail = new Mail();
             mail.Recipient = replyTo;
+            mail.Body = await getSignatureTask;
             return View(mail);
         }
 

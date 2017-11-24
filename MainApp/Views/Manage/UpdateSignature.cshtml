@@ -1,0 +1,22 @@
+@model string
+@{
+    ViewData["Title"] = "Update signatue";
+}
+
+<h2>Add signature</h2>
+
+<h4>User signature</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="UpdateSignature" method="POST" >
+            <div class="form-group">
+                <label class="control-label">Signature</label>
+                <textarea name="signature" class="form-control">@Model</textarea>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Update signature" class="btn btn-default" />
+            </div>
+        </form>
+    </div>
+</div>

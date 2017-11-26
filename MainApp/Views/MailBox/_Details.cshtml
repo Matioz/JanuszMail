@@ -28,6 +28,7 @@
             @Html.DisplayNameFor(model => model.Subject)
         </dt>
         <dd>
+            @if(Model.Subject.Length == 0) {<text>(No title)</text>} 
             @Html.DisplayFor(model => model.Subject)
         </dd>
         <dt>
@@ -41,6 +42,16 @@
             </div>
         </dd>
         @foreach(var attachment in Model.Attachments) {
+            <table class="table">
+                <tr>
+                    <td>
+                        @Html.DisplayFor(fileName => attachment)
+                        <a asp-controller="MailBox" asp-action="DownloadAttachment" asp-route-id="@Model.ID" asp-route-fileName="@attachment" asp-route-folder="@Model.Folder">Download</a>
+                    </td>
+                </tr>
+            </table>
+        }
+        @foreach(var attachment in Model.AttachmentFileNames) {
             <table class="table">
                 <tr>
                     <td>

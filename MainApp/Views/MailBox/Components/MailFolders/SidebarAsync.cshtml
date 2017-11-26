@@ -1,15 +1,22 @@
 @model IList<string>
 <div class="navbar navbar-static-top navbar-default sidebar" role="navigation">
     <div class="sidebar-nav navbar-collapse">
-                <a asp-area="" class="btn-success btn btn-block"  asp-controller="Mailbox" asp-action="Send" asp-route-folder="@ViewData["Folder"]" >
+                <a asp-area="" class="btn-success btn btn-block nav-partial"  asp-controller="Mailbox" asp-action="Send" asp-route-folder="@ViewData["Folder"]" >
                     <strong>Create new message</strong>
                 </a>
         <ul class="nav">
-            <li class="sidebar-search">
-                <div class="input-group custom-search-form">
-                    <input type="text" class="form-control" placeholder="Search...">
+            <li class="sidebar-search" id="sidebarSearch">
+                    <div class="form-group">
+                    <label class="control-label">Search by</label>
+                    <select id="searchBy" class="form-control">
+                        <option value="subject">Subject</option>
+                        <option value="sender">Sender</option>
+                    </select>
+                    </div>
+                    <div class="input-group custom-search-form">
+                    <input type="text" class="form-control" id="searchText" placeholder="Search...">
                     <span class="input-group-btn">
-                    <button class="btn btn-default" type="button">
+                    <button id="searchButton" class="btn btn-default disabled" type="button">
                         <i class="fa fa-search"></i>
                     </button>
                 </span>
@@ -19,7 +26,7 @@
             {
             @foreach (var item in Model) {
                 <li>
-                    <a asp-area="" asp-controller="Mailbox" asp-action="ShowMails" asp-route-folder="@item" >
+                    <a class="nav-folder" folder-name="@item" href="#" >
                         <span class="fa fa-fw"></span>
                         @if (item.Equals(ViewData["Folder"])){
                             <strong>@item</strong>

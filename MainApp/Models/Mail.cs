@@ -56,6 +56,30 @@ namespace JanuszMail.Models
                 }
             }
         }
-        //TODO: Add property for attachments
+    }
+
+    public class MailHeader
+    {
+        public uint ID { get; set; }
+        public string Recipient { get; set; }
+        public string SenderName { get; set; }
+        public string SenderEmail { get; set; }
+        public string Subject { get; set; }
+        public DateTime Date { get; set; }
+        public bool IsRead { get; set; }
+        public MailHeader(Mail mail)
+        {
+            this.ID = mail.ID.Id;
+            this.Recipient = mail.Recipient;
+            this.SenderEmail = mail.SenderEmail;
+            this.SenderName = mail.SenderName;
+            this.Subject = mail.Subject;
+            this.Date = mail.Date;
+            this.IsRead = mail.IsRead;
+        }
+        public static implicit operator MailHeader(Mail mail)
+        {
+            return new MailHeader(mail);
+        }
     }
 }

@@ -1,13 +1,17 @@
 
 @using JanuszMail.Models;
-@model PagedList.Core.IPagedList<Mail>
+@model PagedList.Core.IPagedList<MailHeader>
     <h3>@ViewBag.Folder</h3>
+    @if(Model.Count == 0) {
+        <h3>No mails to display</h3>
+    }
+    else{
     <table class="table table-striped table-hover panel panel-default">
         <tr class="row">
             <th class="col-md-1 col-sm-1 col-lg-1">
             </th>
             <th class="col-md-7 col-sm-7 col-lg-7">
-                 <a class="btn-block" asp-area="" asp-controller="Mailbox" asp-action="ShowMails"
+                 <a class="btn-block allow-partial" asp-area="" asp-controller="Mailbox" asp-action="ShowMails"
                     asp-route-page="@Model.PageNumber"
                     asp-route-pageSize="@Model.PageSize"
                     asp-route-folder="@ViewBag.Folder"
@@ -17,7 +21,7 @@
                 </a>
             </th>
             <th class="col-md-2 col-sm-2 col-lg-2">
-                 <a class="btn-block" asp-area="" asp-controller="Mailbox" asp-action="ShowMails"
+                 <a class="btn-block allow-partial" asp-area="" asp-controller="Mailbox" asp-action="ShowMails"
                     asp-route-page="@Model.PageNumber"
                     asp-route-pageSize="@Model.PageSize"
                     asp-route-folder="@ViewBag.Folder"
@@ -27,7 +31,7 @@
                 </a>
             </th>
             <th class="col-md-2 col-sm-2 col-lg-2">
-                 <a class="btn-block" asp-area="" asp-controller="Mailbox" asp-action="ShowMails"
+                 <a class="btn-block allow-partial" asp-area="" asp-controller="Mailbox" asp-action="ShowMails"
                     asp-route-page="@Model.PageNumber"
                     asp-route-pageSize="@Model.PageSize"
                     asp-route-folder="@ViewBag.Folder"
@@ -40,30 +44,13 @@
 @foreach (var item in Model) {
         <tr class="row">
             <td>
-                <form asp-controller="MailBox" method="post">
-                    <input type="hidden" name="id" value="@item.ID.Id"/>
-                    <input type="hidden" name="folder" value="@ViewData["Folder"]"/>
-                    <input type="hidden" name="returnUrlPassing" value="@ViewData["ReturnUrl"]"/>
-                    <input type="hidden" name="returnUrlFailing" value="@ViewData["ReturnUrl"]"/>
-                    <div class="btn-group">
-                    <button class="btn-danger btn" type="submit" formaction="Delete">
-                        <span class="fa fa-trash"></span>
-                    </button>
-                    @{
-                        var envelopeClass = item.IsRead == true ? "fa-envelope-open" : "fa-envelope";
-                        var markAction = item.IsRead == true ? "MarkUnread" : "MarkRead";
-                        var buttonClass = item.IsRead == true ? "btn-info" : "btn-warning";
-                    }
-                    <button class="btn @buttonClass" type="submit" formaction="@markAction">
-                        <span class="fa @envelopeClass"></span>
-                    </button>
-                    </div>
-                </form>
+                @await Component.InvokeAsync("MailManagement", new {isMailRead=@item.IsRead, mailId=@item.ID, folder=@ViewData["Folder"]})
             </td>
             <td>
-                 <a class="btn-block" asp-area="" asp-controller="Mailbox" asp-action="Details" asp-route-id="@item.ID.Id" asp-route-folder="@ViewData["Folder"]">
-                @Html.DisplayFor(modelItem => item.Subject)
-                    </a>
+                 <a class="btn-block allow-partial" asp-area="" asp-controller="Mailbox" asp-action="Details" asp-route-id="@item.ID" asp-route-folder="@ViewData["Folder"]">
+                    @if(item.Subject.Length == 0) {<text>(No title)</text>} 
+                    @Html.DisplayFor(modelItem => item.Subject)
+                </a>
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.SenderName)
@@ -76,3 +63,5 @@
 }
      </table>
 @Html.Partial("_Pager")
+<script src="~/js/Mailbox/show-mails.js"/>
+}

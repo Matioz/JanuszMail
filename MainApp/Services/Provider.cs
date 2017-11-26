@@ -377,6 +377,7 @@ namespace JanuszMail.Services
             mailFolder.Open(FolderAccess.ReadWrite);
             _currentFolderSummary = mailFolder.Fetch(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Flags | MessageSummaryItems.Envelope);
             mailFolder.Close();
+            _currentFolder = folder;
         }
     }
 }

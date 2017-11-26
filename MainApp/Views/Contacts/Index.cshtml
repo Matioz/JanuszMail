@@ -26,7 +26,7 @@
                 @Html.DisplayFor(modelItem => item.Name)
             </td>
             <td>
-                <a asp-controller="MailBox" asp-action="Send" asp-route-replyTo="@item.EmailAddress">
+                <a asp-controller="MailBox" asp-action="Index" asp-route-replyTo="@item.EmailAddress">
                     @item.EmailAddress
                 </a>
             </td>

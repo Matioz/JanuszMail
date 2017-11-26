@@ -19,7 +19,7 @@
             @Html.DisplayNameFor(model => model.EmailAddress)
         </dt>
         <dd>
-            <a asp-controller="MailBox" asp-action="Send" asp-route-replyTo="@Model.EmailAddress">
+            <a asp-controller="MailBox" asp-action="Index" asp-route-replyTo="@Model.EmailAddress">
                 @Model.EmailAddress
             </a>
         </dd>
@@ -28,7 +28,7 @@
 <div>
     <a class="btn btn-default" asp-action="Index">Back to List</a>
     <a class="btn btn-warning" asp-action="Edit" asp-route-id="@Model.ID">Edit</a>
-    <a class="btn btn-primary" asp-controller="MailBox" asp-action="Send" asp-route-replyTo="@Model.EmailAddress">
+    <a class="btn btn-primary" asp-controller="MailBox" asp-action="Index" asp-route-replyTo="@Model.EmailAddress">
         Send a message
     </a>
 </div>

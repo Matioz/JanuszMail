@@ -1,0 +1,15 @@
+<form enctype="text/plain" asp-controller="MailBox" method="POST" class="async-form" asp-action="Index">
+    <input type="hidden" name="id" value="@ViewData["mailId"]"/>
+    <input type="hidden" name="folder" value="@ViewData["folder"]"/>
+    <div class="btn-group">
+        <button class="btn-danger btn async-button" type="submit" formaction="Delete">
+            <span class="fa fa-trash"></span>
+        </button>
+        <button class="btn @ViewData["buttonClass"] async-button" type="submit" formaction="@ViewData["markAction"]">
+            <span class="fa @ViewData["envelopeClass"]"></span>
+        </button>
+    </div>
+</form>
+<script> 
+
+</script>

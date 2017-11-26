@@ -1,5 +1,26 @@
+@model string
 @{
-    ViewData["Title"] = "MailBox";
+    ViewData["Title"] = "Webmail";
 }
-<h2> E-Mail list under construction...</h2>
-<h4>Please come back later :)</h4>
+
+<h3>Select folder</h3>
+@if(Model != null) {
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-2.2.0.min.js"></script>
+    <script>
+    $(document).ready(function () {
+        $.ajax({
+            url: "MailBox/Send",
+            data: {replyTo: "@Model"},
+            type: 'GET',
+            ajaxSend: $('#MailList').html('<div class="text-center block"><img src="images/ajax-loader.gif" alt="Loading mails"/></div>'),
+            success: 
+                function (data) {
+                $('#MailList').html(data); 
+            },
+            error: function (obj) {
+                alert('Something happened');
+            }
+        });
+    });
+    </script>
+}

@@ -3,7 +3,7 @@
 
 <h4>Create mail</h4>
 <hr />
-<form enctype="multipart/form-data" asp-controller="MailBox" method="post">
+<form enctype="multipart/form-data" asp-controller="MailBox" class="async-form" method="post" asp-action="Index">
     <div class="row">
         <div class="col-md-4">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -26,15 +26,16 @@
     </div>
     <div class="form-group">
         <label asp-for="Body" class="control-label"></label>
-        <textarea id="richTextArea" asp-for="Body" class="form-control" >></textarea>
+        <textarea id="richTextArea" asp-for="Body" class="form-control" ></textarea>
         <span asp-validation-for="Body" class="text-danger"></span>
     </div>
     <div class="form-group">
-        <button type="submit" class="btn btn-info" formaction="Send">Send</button>
-        <button type="submit" class="btn btn-warning" formaction="SaveDraft">Save as draft</button>
+        <button type="submit" class="btn btn-info async-button" formaction="Send">Send</button>
+        <button type="submit" class="btn btn-warning async-button" formaction="SaveDraft">Save as draft</button>
     </div>
 </form>
-<script> tinymce.init({
+<script>
+    tinymce.init({
     selector: '#richTextArea',
     plugins: ["emoticons", "autolink"],
     menubar: false,
@@ -42,3 +43,4 @@
     branding: false
 });
 </script>
+<script src="~/js/Mailbox/send.js"/>

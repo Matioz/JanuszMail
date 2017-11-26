@@ -1,24 +1,23 @@
 @model IEnumerable<string>
-<form class="form-inline" asp-controller="MailBox" method="post">
+<form enctype="text/plain" class="form-inline async-form" asp-controller="MailBox" method="POST" asp-action="Index">
   <div class="input-group">
     <input type="hidden" name="id" value="@ViewData["Id"]"/>
-    <input type="hidden" name="folder" value="@ViewData["Folder"]"/>
-    <input type="hidden" name="returnUrlPassing" value="@ViewData["ReturnUrlPassing"]"/>
-    <input type="hidden" name="returnUrlFailing" value="@ViewData["ReturnUrlFailing"]"/>
+    <input type="hidden" name="folder" id="currentFolderName" value="@ViewData["Folder"]"/>
     <label class="control-label">Select folder</label>
     <select name="destFolder">
       @foreach(var item in Model) {
         <option>@item</option>
       }
     </select>
-    <button class="btn btn-warning" type="submit" formaction="MoveToFolder">
+    <button class="btn btn-warning async-button" type="submit" formaction="MoveToFolder">
       <strong>Move to folder</strong>
     </button>
-    <button class="btn btn-danger" type="submit" formaction="Delete">
+    <button class="btn btn-danger async-button" type="submit" formaction="Delete">
       <strong>Delete&nbsp;</strong><span class="fa fa-trash"/>
     </button>
-    <a class="btn btn-primary" asp-controller="Mailbox" asp-action="Send" asp-route-replyTo="@ViewData["ReplyTo"]">
+    <a class="btn btn-primary partial-button" asp-controller="Mailbox" asp-action="Send" asp-route-replyTo="@ViewData["ReplyTo"]">
       <strong>Reply&nbsp; <span class="fa fa-reply"/></strong>
     </a>
   </div>
 </form>
+<script src="~/js/Mailbox/detail-utils.js"/>

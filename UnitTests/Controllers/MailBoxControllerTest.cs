@@ -60,7 +60,7 @@ namespace UnitTests.Controllers
 
             var viewResult = controller.Index().Result as ViewResult;
             Assert.AreEqual("Error", viewResult.ViewName);
-            Assert.IsTrue(viewResult.TempData["ErrorMessage"].ToString().Contains("no provider"));
+            Assert.IsTrue(viewResult.TempData["ErrorMessage"].ToString().Contains("make sure you added correct provider"));
         }
 
         [TestMethod]
@@ -70,24 +70,12 @@ namespace UnitTests.Controllers
             SetProviderConnectionResponse(HttpStatusCode.OK);
 
             var result = controller.Index();
-            Assert.IsInstanceOfType(result.Result, typeof(RedirectToActionResult));
-            var actionResult = (RedirectToActionResult)result.Result;
-            Assert.AreEqual("ShowMails", actionResult.ActionName);
+            Assert.IsInstanceOfType(result.Result, typeof(ViewResult));
+            var viewResult = (ViewResult)result.Result;
+            Assert.IsNull(viewResult.ViewName);
         }
 
         [TestMethod]
-        public void GivenProviderWhenConnectMethodReturnsOKThenControllerReturnsIndexView()
-        {
-            AddProviderParamsToCurrentUser();
-            SetProviderConnectionResponse(HttpStatusCode.OK);
-
-            var result = controller.Index();
-            Assert.IsInstanceOfType(result.Result, typeof(RedirectToActionResult));
-            var actionResult = (RedirectToActionResult)result.Result;
-            Assert.AreEqual("ShowMails", actionResult.ActionName);
-        }
-
-        //[TestMethod]
         public void GivenProviderWhenConnectMethodReturnsExpectationFailedThenControllerReturnsErrorViewWithFailedConnectionMessage()
         {
             AddProviderParamsToCurrentUser();
@@ -95,10 +83,11 @@ namespace UnitTests.Controllers
 
             var viewResult = controller.Index().Result as ViewResult;
             Assert.AreEqual("Error", viewResult.ViewName);
-            Assert.IsTrue(viewResult.ViewData["ErrorMessage"].ToString().Contains("connection failed"));
+            Assert.IsTrue(viewResult.TempData["ErrorMessage"].ToString().Contains("Cannot connect to provider"));
         }
 
         [DataTestMethod]
+        //[DataRow(page, pageSize)]
         [DataRow(1, 3)]
         [DataRow(2, 3)]
         [DataRow(3, 3)]
@@ -113,14 +102,14 @@ namespace UnitTests.Controllers
                     mailList.Add(new Mail()
                     {
                         ID = new MailKit.UniqueId(Convert.ToUInt32(pageId) * Convert.ToUInt32(pageSize) + Convert.ToUInt32(entryId) + 1),
-                        Date = DateTime.Now.AddDays(-(pageId * pageSize + entryId))
+                        Date = DateTime.Now
                     });
                 }
             }
 
 
             mockProvider.Setup(mock => mock.GetMailsFromFolder(It.Is<string>(folder => folder.Equals("inbox")),
-                 It.Is<int>(p => p == page), It.Is<int>(ps => ps == pageSize), It.Is<string>(sortOder => sortOder.Equals("dateAsc"))))
+                 It.Is<int>(p => p == page), It.Is<int>(ps => ps == pageSize), It.Is<string>(sortOder => sortOder.Equals("dateDesc"))))
                  .Returns(new Tuple<IList<Mail>, HttpStatusCode>(mailList.Skip(pageSize * (page - 1)).Take(pageSize).ToList(), HttpStatusCode.OK));
             var mockMailFolder = new Mock<IMailFolder>();
             mockMailFolder.Setup(mock => mock.Count).Returns(pageSize);
@@ -130,18 +119,18 @@ namespace UnitTests.Controllers
             SetProviderConnectionResponse(HttpStatusCode.OK);
             SetProviderAuthenticationState(true);
 
-            var viewResult = controller.ShowMails(page, pageSize, "inbox", "dateAsc", null, null).Result as ViewResult;
-            Assert.IsNull(viewResult.ViewName);
-            Assert.IsNull(viewResult.ViewData["ErrorMessage"]);
+            var viewResult = controller.ShowMails(page, pageSize, "inbox", "dateDesc", null, null).Result as PartialViewResult;
+            Assert.AreEqual("_ShowMails", viewResult.ViewName);
+            Assert.IsNull(viewResult.TempData["ErrorMessage"]);
 
-            Assert.IsInstanceOfType(viewResult.Model, typeof(IPagedList<Mail>));
-            var receivedModel = (IPagedList<Mail>)viewResult.Model;
+            Assert.IsInstanceOfType(viewResult.Model, typeof(IPagedList<MailHeader>));
+            var receivedModel = (IPagedList<MailHeader>)viewResult.Model;
             Assert.IsNotNull(receivedModel);
-            var receivedMails = (IList<Mail>)(receivedModel.ToList());
+            var receivedMails = (IList<MailHeader>)(receivedModel.ToList());
             Assert.AreEqual(pageSize, receivedMails.Count);
             for (int entryId = 1; entryId < pageSize; entryId++)
             {
-                Assert.AreEqual(Convert.ToUInt32(page - 1) * Convert.ToUInt32(pageSize) + Convert.ToUInt32(entryId) + 1, receivedMails.ElementAt(entryId).ID.Id);
+                Assert.AreEqual(Convert.ToUInt32(page - 1) * Convert.ToUInt32(pageSize) + Convert.ToUInt32(entryId) + 1, receivedMails.ElementAt(entryId).ID);
             }
 
         }
@@ -161,8 +150,8 @@ namespace UnitTests.Controllers
             Callback(() => mail.IsRead = true);
 
 
-            var viewResult = controller.Details(1, "any").Result as ViewResult;
-            Assert.IsNull(viewResult.ViewName);
+            var viewResult = controller.Details(1, "any").Result as PartialViewResult;
+            Assert.AreEqual("_Details", viewResult.ViewName);
 
             Assert.IsInstanceOfType(viewResult.Model, typeof(Mail));
             Assert.AreEqual(mail, viewResult.Model);
@@ -177,8 +166,6 @@ namespace UnitTests.Controllers
 
             string srcFolder = "srcFolder";
             string destFolder = "destFolder";
-            string returnUrlPassing = "passing";
-            string returnUrlFailing = "failing";
 
             var mail = new Mail();
             mail.Folder = srcFolder;
@@ -188,8 +175,8 @@ namespace UnitTests.Controllers
             mockProvider.Setup(mock => mock.MoveEmailToFolder(It.IsAny<UniqueId>(), It.IsAny<string>(), It.IsAny<string>())).
             Callback<UniqueId, string, string>((id, sFolder, dFolder) => mail.Folder = dFolder).Returns(HttpStatusCode.OK);
 
-            var result = controller.MoveToFolder(1, srcFolder, destFolder, returnUrlPassing, returnUrlFailing).Result as RedirectResult;
-            Assert.AreEqual(returnUrlPassing, result.Url);
+            var result = controller.MoveToFolder(1, srcFolder, destFolder).Result;
+            Assert.IsTrue(result);
             Assert.AreEqual(destFolder, mail.Folder);
         }
 

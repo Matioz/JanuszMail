@@ -4,12 +4,26 @@
 
 <div class="container-flex">
     <div class="body-content-left">
-        @await Component.InvokeAsync("MailFolders", new {viewName="Sidebar"})
+        @await Component.InvokeAsync("MailFolders", new {viewName="SidebarAsync"})
     </div>
-    <div class="body-content-right">
-        <h3 class="text-danger">
-            @TempData["ErrorMessage"]
-        </h3>
-        @RenderBody()
+    <div class="body-content-right">    
+        <div id="MailList">
+            @RenderBody()
+        </div>
+        <div class="modal fade" id="actionStatus" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body" id="statusBody"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" id="closeButton">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="hidden" data-toggle="modal" data-target="#actionStatus" id="modalButton"/>
     </div>
 </div>
+
+@section mailboxScripts {
+    <script src="~/js/Mailbox/layout.js"></script>
+}

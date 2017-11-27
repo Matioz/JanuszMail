@@ -12,12 +12,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 
+using Microsoft.AspNetCore.Http;
 using MailKit.Net.Imap;
 using MailKit.Net.Smtp;
 using MailKit.Search;
 using MailKit;
 using MimeKit;
 using PagedList.Core;
+using JanuszMail.Extensions;
+
 namespace JanuszMail.Controllers
 {
     [Authorize]
@@ -25,7 +28,6 @@ namespace JanuszMail.Controllers
     {
         private ProviderParams _providerParams;
         private MailBoxViewModel _mailBoxViewModel;
-        private string currentFolder;
 
         public MailBoxController(IProvider provider, UserManager<ApplicationUser> userManager, JanuszMailDbContext dbContext)
         {
@@ -73,25 +75,48 @@ namespace JanuszMail.Controllers
             //Should return partial view with PagedList of MailMessages that matches to given params
             //When there is no matching messages then should return partial view with error message
             ViewBag.Folder = folder;
-            var connectionStatus = await ConnectToProvider();
-            if (!connectionStatus)
-            {
-                TempData["ErrorMessage"] = "Something wrong with connection";
-                return null;
-            }
+            // var connectionStatus = await ConnectToProvider();
+            // if (!connectionStatus)
+            // {
+            //     TempData["ErrorMessage"] = "Something wrong with connection";
+            //     return null;
+            // }
             int currentPage = page ?? 1;
             int currentPageSize = pageSize ?? 25;
-            var mailsTuple = await Task.Run(() => { return _provider.GetMailsFromFolder(folder, currentPage, currentPageSize, sortOrder); });
-            var httpStatusCode = mailsTuple.Item2;
+            // var mailsTuple = await Task.Run(() => { return _provider.GetMailsFromFolder(folder, currentPage, currentPageSize, sortOrder); });
+            // var httpStatusCode = mailsTuple.Item2;
 
-            if (!httpStatusCode.Equals(HttpStatusCode.OK))
+            // if (!httpStatusCode.Equals(HttpStatusCode.OK))
+            // {
+            //     TempData["ErrorMessage"] = "Downloading messages from server failed";
+            //     return null;
+            // }
+
+            var cachedMails = await GetCachedMails(folder);
+
+            var mails = cachedMails.AsQueryable().Skip(currentPageSize * (currentPage - 1)).Take(currentPageSize);
+
+            switch (sortOrder)
             {
-                TempData["ErrorMessage"] = "Downloading messages from server failed";
-                return null;
+                case "dateAsc":
+                    mails = mails.OrderBy(mail => mail.Date);
+                    break;
+                case "subjectDesc":
+                    mails = mails.OrderByDescending(mail => mail.Subject);
+                    break;
+                case "subjectAsc":
+                    mails = mails.OrderBy(mail => mail.Subject);
+                    break;
+                case "senderDesc":
+                    mails = mails.OrderByDescending(mail => mail.SenderEmail);
+                    break;
+                case "senderAsc":
+                    mails = mails.OrderBy(mail => mail.SenderEmail);
+                    break;
+                default:
+                    mails = mails.OrderByDescending(mail => mail.Date);
+                    break;
             }
-
-            var mails = mailsTuple.Item1.AsQueryable();
-
             if (!String.IsNullOrEmpty(subject))
             {
                 mails = mails.Where(mail => mail.Subject.Contains(subject));
@@ -107,9 +132,8 @@ namespace JanuszMail.Controllers
             ViewBag.CurrentPageSize = currentPageSize;
             ViewBag.CurrectSortOrder = sortOrder;
 
-            currentFolder = folder;
-            List<MailHeader> headers = mails.Select<Mail, MailHeader>(x => x).ToList();
-            var results = new StaticPagedList<MailHeader>(headers, currentPage, currentPageSize, _provider.GetFolder(currentFolder).Count);
+            //List<MailHeader> headers = mails.Select<Mail, MailHeader>(x => x).ToList();
+            var results = new StaticPagedList<MailHeader>(mails, currentPage, currentPageSize, cachedMails.Count);
             return PartialView("_ShowMails", results);
         }
 
@@ -323,6 +347,59 @@ namespace JanuszMail.Controllers
 
             return (result == HttpStatusCode.OK);
         }
+
+        public async Task<IList<string>> QuickSearch(string folder, string subject, string sender)
+        {
+            if (folder == null)
+            {
+                return new List<string>();
+            }
+            var mailList = await GetCachedMails(folder);
+            var mails = mailList.AsQueryable();
+            if (subject != null)
+            {
+                mails = mails.Where(mail => mail.Subject.Contains(subject));
+                return mails.Take(5).Select(mail => mail.Subject).ToList();
+            }
+            if (sender != null)
+            {
+                mails = mails.Where(mail => mail.SenderName.Contains(sender) || mail.SenderEmail.Contains(sender));
+                return mails.Take(5).Select(mail => mail.SenderName + " " + mail.SenderEmail).ToList();
+            }
+            return new List<string>();
+        }
+
+        private async Task<IList<MailHeader>> GetCachedMails(string folder)
+        {
+
+            var currentList = HttpContext.Session.GetObjectFromJson<IList<MailHeader>>(folder);
+            if (currentList == null)
+            {
+                await UpdateCachedMails(folder);
+                return HttpContext.Session.GetObjectFromJson<IList<MailHeader>>(folder);
+            }
+            return currentList;
+        }
+        public async Task<bool> UpdateCachedMails(string folder)
+        {
+            var connectionStatus = await ConnectToProvider();
+
+            if (!connectionStatus)
+            {
+                return false;
+            }
+            var mailsTuple = await Task.Run(() => { return _provider.GetMailsFromFolder(folder, 1, 100, "dateDesc"); });
+            var httpStatusCode = mailsTuple.Item2;
+            if (httpStatusCode == HttpStatusCode.OK)
+            {
+                var fullMailList = mailsTuple.Item1;
+                var latestList = fullMailList.Select<Mail, MailHeader>(x => x).ToList();
+                HttpContext.Session.SetObjectAsJson(folder, latestList);
+                return true;
+            }
+            return false;
+        }
+
         private readonly IProvider _provider;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JanuszMailDbContext _dbContext;

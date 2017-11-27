@@ -77,4 +77,40 @@ $(document).ready(function () {
             }
         });
     });
+    $("#searchText").autocomplete({
+        source: function (request, response) {
+            var subject = "";
+            var sender = "";
+            if ($("#searchBy").val() == "subject") {
+                subject = request.term;
+            }
+            else {
+                sender = request.term;
+            }
+            $.ajax({
+                url: "MailBox/QuickSearch",
+                dataType: "jsonp",
+                data: {
+                    folder: currentFolder,
+                    sender: sender,
+                    subject: subject
+                },
+                success: function (data) {
+                    response(data);
+                }
+            });
+        },
+        minLength: 2,
+        select: function (event, ui) {
+            log(ui.item ?
+                "Selected: " + ui.item.label :
+                "Nothing selected, input was " + this.value);
+        },
+        open: function () {
+            $(this).removeClass("ui-corner-all").addClass("ui-corner-top");
+        },
+        close: function () {
+            $(this).removeClass("ui-corner-top").addClass("ui-corner-all");
+        }
+    });
 });

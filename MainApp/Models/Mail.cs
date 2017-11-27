@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using MailKit;
 using MimeKit;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 
 namespace JanuszMail.Models
 {
@@ -67,15 +68,27 @@ namespace JanuszMail.Models
         public string Subject { get; set; }
         public DateTime Date { get; set; }
         public bool IsRead { get; set; }
+        public MailHeader() { }
         public MailHeader(Mail mail)
         {
-            this.ID = mail.ID.Id;
+            this.ID = mail.ID != null ? mail.ID.Id : 0;
             this.Recipient = mail.Recipient;
             this.SenderEmail = mail.SenderEmail;
             this.SenderName = mail.SenderName;
             this.Subject = mail.Subject;
             this.Date = mail.Date;
             this.IsRead = mail.IsRead;
+        }
+        [JsonConstructor]
+        public MailHeader(uint ID, string Recipient, string SenderEmail, string SenderName, string Subject, DateTime Date, bool IsRead)
+        {
+            this.ID = ID;
+            this.Recipient = Recipient;
+            this.SenderEmail = SenderEmail;
+            this.SenderName = SenderName;
+            this.Subject = Subject;
+            this.Date = Date;
+            this.IsRead = IsRead;
         }
         public static implicit operator MailHeader(Mail mail)
         {

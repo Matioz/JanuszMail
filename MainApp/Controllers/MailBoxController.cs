@@ -140,8 +140,8 @@ namespace JanuszMail.Controllers
             var markReadTask = Task.Run(() => _provider.MarkEmailAsRead(new UniqueId(ID), folder));
             var mail = tuple.Item1;
             var httpStatusCode = tuple.Item2;
-            if(folder == "Drafts"){
-                return View(mail);
+            if(mail.summary.Flags.Value.HasFlag(MessageFlags.Draft)){
+                return PartialView("_Send", model: mail);
             }
 
             if (!httpStatusCode.Equals(HttpStatusCode.OK))
@@ -330,15 +330,21 @@ namespace JanuszMail.Controllers
 
             return (result == HttpStatusCode.OK);
         }
-        [HttpPost, ActionName("SaveDraft")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveDraft([Bind("ID,Recipient,Subject,Body")] Mail mail)
+        public async Task<bool> SaveDraft([Bind("ID,Recipient,Subject,Body")] Mail mail)
         {
             var connectionStatus = await ConnectToProvider();
+            if (mail.Recipient == null){
+                mail.Recipient = "";
+            }
+            if (mail.Subject == null){
+                mail.Subject = "";
+            }
+            if (mail.Body == null){
+                mail.Body = "";
+            }
             if (!connectionStatus)
             {
-                TempData["ErrorMessage"] = "You have no provider selected. Go to Manage and add provider.";
-                return View("Error");
+                return false;
             }
             if (ModelState.IsValid)
             {
@@ -347,15 +353,14 @@ namespace JanuszMail.Controllers
                 HttpStatusCode httpStatusCode = await Task.Run(() => { return _provider.SaveDraft(mail.mimeMessage); });
                 if (httpStatusCode.Equals(HttpStatusCode.OK))
                 {
-                    return RedirectToAction(nameof(Index));
+                    return true;
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Could not send the message";
-                    return View(mail);
+                    return false;
                 }
             }
-            return View(mail);
+            return true;
         }
         private readonly IProvider _provider;
         private readonly UserManager<ApplicationUser> _userManager;

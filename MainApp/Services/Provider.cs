@@ -102,8 +102,13 @@ namespace JanuszMail.Services
                     var toplevel = _imapClient.GetFolder(_imapClient.PersonalNamespaces[0]);
                     var DraftFolder = toplevel.Create(SpecialFolder.Drafts.ToString(), true);
                     DraftFolder.Expunge();
+<<<<<<< 9784983eff6f681f48abbffedee8d964bf08cee9
                 }
                 Folders.Add("Drafts");
+=======
+                    Folders.Add(SpecialFolder.Drafts.ToString());
+                }
+>>>>>>> Add drafts
             return new Tuple<IList<string>, HttpStatusCode>(Folders, HttpStatusCode.OK);
         }
 

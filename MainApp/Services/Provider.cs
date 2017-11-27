@@ -96,6 +96,14 @@ namespace JanuszMail.Services
                 }
                 Folders.Add(folder.Name);
             }
+            var draftFolder = _imapClient.GetFolder(SpecialFolder.Drafts);
+                if (draftFolder == null)
+                {
+                    var toplevel = _imapClient.GetFolder(_imapClient.PersonalNamespaces[0]);
+                    var DraftFolder = toplevel.Create(SpecialFolder.Drafts.ToString(), true);
+                    DraftFolder.Expunge();
+                    Folders.Add(SpecialFolder.Drafts.ToString());
+                }
             return new Tuple<IList<string>, HttpStatusCode>(Folders, HttpStatusCode.OK);
         }
 
@@ -329,6 +337,8 @@ namespace JanuszMail.Services
             return id;
         }
 
+
+
         private bool IsConnected()
         {
 
@@ -378,6 +388,31 @@ namespace JanuszMail.Services
             _currentFolderSummary = mailFolder.Fetch(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Flags | MessageSummaryItems.Envelope);
             mailFolder.Close();
             _currentFolder = folder;
+        }
+        public HttpStatusCode SaveDraft(MimeMessage mailMessage){
+            if (!IsAuthenticated())
+            {
+                return HttpStatusCode.ExpectationFailed;
+            }
+            var draftFolder = _imapClient.GetFolder(SpecialFolder.Drafts);
+            if (draftFolder != null)
+            {
+                draftFolder.Open(FolderAccess.ReadWrite);
+
+                draftFolder.Append(mailMessage, MessageFlags.Draft);
+                draftFolder.Expunge();
+            }
+            else
+            {
+                var toplevel = _imapClient.GetFolder(_imapClient.PersonalNamespaces[0]);
+                var DraftFolder = toplevel.Create(SpecialFolder.Drafts.ToString(), true);
+
+                DraftFolder.Open(FolderAccess.ReadWrite);
+                DraftFolder.Append(mailMessage, MessageFlags.Draft);
+                DraftFolder.Expunge();
+            }
+            return HttpStatusCode.OK;
+
         }
     }
 }

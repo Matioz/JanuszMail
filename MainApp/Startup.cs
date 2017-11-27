@@ -40,6 +40,8 @@ namespace JanuszMail
             services.AddTransient<IEmailSender, EmailSender>();
 
             services.AddMvc();
+            services.AddDistributedMemoryCache(); // Adds a default in-memory implementation of IDistributedCache
+            services.AddSession();
 
             services.AddScoped<IProvider, Provider>();
         }
@@ -60,6 +62,8 @@ namespace JanuszMail
             app.UseStaticFiles();
 
             app.UseAuthentication();
+            // IMPORTANT: This session call MUST go before UseMvc()
+            app.UseSession();
 
             app.UseMvc(routes =>
             {

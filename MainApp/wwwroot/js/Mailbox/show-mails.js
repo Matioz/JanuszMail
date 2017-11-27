@@ -64,3 +64,36 @@ $("a.allow-partial").click(function (event) {
         }
     });
 });
+
+$("button.async-reload-folder").click(function (event) {
+    event.preventDefault();
+    var currentContent = $('#MailList').html();
+    var folderName = $(this).attr("folder-name");
+    $.ajax({
+        url: "MailBox/UpdateCachedMails",
+        data: { folder: folderName },
+        contentType: 'text/html; charset=utf-8',
+        type: 'GET',
+        success: function (data) {
+            $.ajax({
+                url: "MailBox/ShowMails",
+                data: { folder: folderName },
+                type: 'GET',
+                success:
+                    function (data) {
+                        $('#MailList').html(data);
+                    },
+                error: function (obj) {
+                    $('#MailList').html(currentContent);
+                    $('#statusBody').html("Something happened");
+                    $("#modalButton").click();
+                }
+            })
+        },
+        error: function (obj) {
+            $('#MailList').html(currentContent);
+            $('#statusBody').html("Something happened");
+            $("#modalButton").click();
+        }
+    });
+});

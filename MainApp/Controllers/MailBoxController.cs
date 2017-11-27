@@ -11,7 +11,6 @@ using System.Net;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-
 using Microsoft.AspNetCore.Http;
 using MailKit.Net.Imap;
 using MailKit.Net.Smtp;
@@ -140,6 +139,7 @@ namespace JanuszMail.Controllers
         public async Task<IActionResult> Details(uint? id, string folder)
         {
             //Should return MailMessage object that timestamp is equals given id
+
             if (id == null)
             {
                 TempData["ErrorMessage"] = "Could not open the message";
@@ -162,6 +162,10 @@ namespace JanuszMail.Controllers
             var markReadTask = Task.Run(() => _provider.MarkEmailAsRead(new UniqueId(ID), folder));
             var mail = tuple.Item1;
             var httpStatusCode = tuple.Item2;
+            if (mail.summary.Flags.Value.HasFlag(MessageFlags.Draft))
+            {
+                return PartialView("_Send", model: mail);
+            }
 
             if (!httpStatusCode.Equals(HttpStatusCode.OK))
             {
@@ -394,6 +398,43 @@ namespace JanuszMail.Controllers
             return false;
         }
 
+        public async Task<bool> SaveDraft([Bind("ID,Recipient,Subject,Body")] Mail mail)
+        {
+            var connectionStatus = await ConnectToProvider();
+            if (mail.Recipient == null)
+            {
+                mail.Recipient = "";
+            }
+            if (mail.Subject == null)
+            {
+                mail.Subject = "";
+            }
+            if (mail.Body == null)
+            {
+                mail.Body = "";
+            }
+
+            if (!connectionStatus)
+            {
+                return false;
+            }
+
+            if (ModelState.IsValid)
+            {
+                mail.mimeMessage = await ConstructMimeMessage(mail);
+
+                HttpStatusCode httpStatusCode = await Task.Run(() => { return _provider.SaveDraft(mail.mimeMessage); });
+                if (httpStatusCode.Equals(HttpStatusCode.OK))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
         private readonly IProvider _provider;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JanuszMailDbContext _dbContext;

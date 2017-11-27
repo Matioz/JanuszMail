@@ -11,6 +11,7 @@ using System.Net;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using Microsoft.AspNetCore.Http;
 
 using MailKit.Net.Imap;
 using MailKit.Net.Smtp;
@@ -116,6 +117,7 @@ namespace JanuszMail.Controllers
         public async Task<IActionResult> Details(uint? id, string folder)
         {
             //Should return MailMessage object that timestamp is equals given id
+
             if (id == null)
             {
                 TempData["ErrorMessage"] = "Could not open the message";
@@ -138,6 +140,9 @@ namespace JanuszMail.Controllers
             var markReadTask = Task.Run(() => _provider.MarkEmailAsRead(new UniqueId(ID), folder));
             var mail = tuple.Item1;
             var httpStatusCode = tuple.Item2;
+            if(folder == "Drafts"){
+                return View(mail);
+            }
 
             if (!httpStatusCode.Equals(HttpStatusCode.OK))
             {
@@ -175,6 +180,8 @@ namespace JanuszMail.Controllers
         }
 
         // GET: MailBox/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Send(string replyTo)
         {
             var connectionStatus = await ConnectToProvider();
@@ -322,6 +329,33 @@ namespace JanuszMail.Controllers
             HttpStatusCode result = await Task.Run(() => { return _provider.MoveEmailToFolder(new UniqueId(id ?? 0), folder, destFolder); });
 
             return (result == HttpStatusCode.OK);
+        }
+        [HttpPost, ActionName("SaveDraft")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveDraft([Bind("ID,Recipient,Subject,Body")] Mail mail)
+        {
+            var connectionStatus = await ConnectToProvider();
+            if (!connectionStatus)
+            {
+                TempData["ErrorMessage"] = "You have no provider selected. Go to Manage and add provider.";
+                return View("Error");
+            }
+            if (ModelState.IsValid)
+            {
+                mail.mimeMessage = await ConstructMimeMessage(mail);
+
+                HttpStatusCode httpStatusCode = await Task.Run(() => { return _provider.SaveDraft(mail.mimeMessage); });
+                if (httpStatusCode.Equals(HttpStatusCode.OK))
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Could not send the message";
+                    return View(mail);
+                }
+            }
+            return View(mail);
         }
         private readonly IProvider _provider;
         private readonly UserManager<ApplicationUser> _userManager;

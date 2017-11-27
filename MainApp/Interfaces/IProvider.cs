@@ -28,5 +28,6 @@ namespace JanuszMail.Interfaces
         IList<Tuple<string, string>> GetBasicInfo(string folder, int page, int pageSize);
         HttpStatusCode DownloadAttachment(string fileName, UniqueId Id, string folderName);
         IMailFolder GetFolder(string name);
+        HttpStatusCode SaveDraft(MimeMessage mailMessage);
     }
 }

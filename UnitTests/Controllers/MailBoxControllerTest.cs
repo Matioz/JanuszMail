@@ -138,13 +138,16 @@ namespace UnitTests.Controllers
         }
 
         [TestMethod]
-        public void GivenMailMessageWhenDetailsMethodIsCalledThenMailMessageIsSetToRead()
+        public void GivenNonDraftMailMessageWhenDetailsMethodIsCalledThenMailMessageIsSetToRead()
         {
             AddProviderParamsToCurrentUser();
             SetProviderConnectionResponse(HttpStatusCode.OK);
 
             var mail = new Mail();
             mail.IsRead = false;
+            var mockSummary = new Mock<IMessageSummary>();
+            mail.summary = mockSummary.Object;
+            mockSummary.Setup(mock => mock.Flags).Returns(MessageFlags.None);
 
             mockProvider.Setup(mock => mock.GetMailFromFolder(It.IsAny<UniqueId>(), It.IsAny<string>())).
             Returns(new Tuple<Mail, HttpStatusCode>(mail, HttpStatusCode.OK));
@@ -159,6 +162,27 @@ namespace UnitTests.Controllers
             Assert.AreEqual(mail, viewResult.Model);
             Assert.IsTrue(((Mail)viewResult.Model).IsRead);
         }
+        [TestMethod]
+        public void GivenDraftMailMessageWhenDetailsMethodIsCalledThenSendViewIsReturned()
+        {
+            AddProviderParamsToCurrentUser();
+            SetProviderConnectionResponse(HttpStatusCode.OK);
+
+            var mail = new Mail();
+            var mockSummary = new Mock<IMessageSummary>();
+            mail.summary = mockSummary.Object;
+            mockSummary.Setup(mock => mock.Flags).Returns(MessageFlags.Draft);
+
+            mockProvider.Setup(mock => mock.GetMailFromFolder(It.IsAny<UniqueId>(), It.IsAny<string>())).
+            Returns(new Tuple<Mail, HttpStatusCode>(mail, HttpStatusCode.OK));
+
+            var viewResult = controller.Details(1, "any").Result as PartialViewResult;
+            Assert.AreEqual("_Send", viewResult.ViewName);
+
+            Assert.IsInstanceOfType(viewResult.Model, typeof(Mail));
+            Assert.AreEqual(mail, viewResult.Model);
+        }
+
 
         [TestMethod]
         public void GivenMailMessageWhenMoveToFolderMethodIsCalledThenMailMessageIsMovedToGivenFolder()

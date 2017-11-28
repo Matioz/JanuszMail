@@ -20,7 +20,7 @@ namespace JanuszMail.Models
         public bool IsRead { get; set; }
         public DateTime Date { get; set; }
         public MailboxAddress Sender { get; set; }
-        public MessageSummary summary { get; set; }
+        public IMessageSummary summary { get; set; }
         public MimeMessage mimeMessage { get; set; }
         public List<IFormFile> Attachments { get; set; }
         public List<string> AttachmentFileNames { get; set; }

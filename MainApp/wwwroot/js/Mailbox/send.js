@@ -7,6 +7,13 @@ $(".async-form").submit(function (event) {
     event.preventDefault();
     var url = "MailBox/" + actionName;
 
+    var successMessage = "";
+    if (actionName == "Send") {
+        successMessage = "Message has been sent";
+    }
+    else if (actionName == "SaveDraft") {
+        successMessage = "Message has been saved as draft";
+    }
     var fd = new FormData();
     fd.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
     fd.append('Subject', $('[name=Subject]').val());
@@ -27,10 +34,10 @@ $(".async-form").submit(function (event) {
         success:
             function (data) {
                 if (data == true) {
-                    $('#statusBody').html('<p class="text-success"> Message  sent</p>');
+                    $('#statusBody').html('<p class="text-success">' + successMessage + '</p>');
                 }
                 else {
-                    $('#statusBody').html('<p class="text-danger"> Sending failed</p>');
+                    $('#statusBody').html('<p class="text-danger"> Operation failed</p>');
                 }
             },
         error: function (obj) {

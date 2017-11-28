@@ -49,7 +49,8 @@ namespace UnitTests.Controllers
             urlHelper = new Mock<IUrlHelper>();
             urlHelper.Setup(x => x.Link(It.IsAny<string>(), It.IsAny<object>())).Returns("http://localhost");
             controller.Url = urlHelper.Object;
-
+            controller.ControllerContext.HttpContext = new DefaultHttpContext();
+            controller.HttpContext.Session = new MockSession();
             controller.TempData = new TempDataDictionary(new Mock<HttpContext>().Object, new Mock<ITempDataProvider>().Object);
         }
 
@@ -109,8 +110,8 @@ namespace UnitTests.Controllers
 
 
             mockProvider.Setup(mock => mock.GetMailsFromFolder(It.Is<string>(folder => folder.Equals("inbox")),
-                 It.Is<int>(p => p == page), It.Is<int>(ps => ps == pageSize), It.Is<string>(sortOder => sortOder.Equals("dateDesc"))))
-                 .Returns(new Tuple<IList<Mail>, HttpStatusCode>(mailList.Skip(pageSize * (page - 1)).Take(pageSize).ToList(), HttpStatusCode.OK));
+                 It.IsAny<int>(), It.IsAny<int>(), It.Is<string>(sortOder => sortOder.Equals("dateDesc"))))
+                 .Returns(new Tuple<IList<Mail>, HttpStatusCode>(mailList, HttpStatusCode.OK));
             var mockMailFolder = new Mock<IMailFolder>();
             mockMailFolder.Setup(mock => mock.Count).Returns(pageSize);
             mockProvider.Setup(mock => mock.GetFolder(It.Is<string>(name => name.Equals("inbox")))).Returns(mockMailFolder.Object);

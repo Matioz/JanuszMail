@@ -398,6 +398,8 @@ namespace JanuszMail.Controllers
             return false;
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<bool> SaveDraft([Bind("ID,Recipient,Subject,Body")] Mail mail)
         {
             var connectionStatus = await ConnectToProvider();

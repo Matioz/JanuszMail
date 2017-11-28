@@ -13,7 +13,7 @@ $(".async-form").submit(function (event) {
     else {
         operation = "Deleting message";
     }
-    var urlForm = $(this).attr("action") + "/" + actionName;
+    var urlForm = "MailBox/" + actionName;
 
     var currentContent = $('#MailList').html();
     $.ajax({

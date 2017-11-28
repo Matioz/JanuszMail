@@ -5,7 +5,7 @@ $(".async-button").click(function (event) {
 $(".async-form").submit(function (event) {
     $("#modalButton").click();
     event.preventDefault();
-    var url = $(this).attr("action") + "/" + actionName;
+    var url = "MailBox/" + actionName;
 
     var fd = new FormData();
     fd.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());

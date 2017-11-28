@@ -78,6 +78,7 @@ $(document).ready(function () {
         });
     });
     $("#searchText").autocomplete({
+
         source: function (request, response) {
             var subject = "";
             var sender = "";
@@ -87,9 +88,12 @@ $(document).ready(function () {
             else {
                 sender = request.term;
             }
+            if (currentFolder == "") {
+                return;
+            }
             $.ajax({
                 url: "MailBox/QuickSearch",
-                dataType: "jsonp",
+                dataType: "json",
                 data: {
                     folder: currentFolder,
                     sender: sender,
@@ -97,20 +101,17 @@ $(document).ready(function () {
                 },
                 success: function (data) {
                     response(data);
+                },
+                error: function (data) {
+                    alert("error");
+                    alert(data[0]);
                 }
             });
         },
-        minLength: 2,
-        select: function (event, ui) {
-            log(ui.item ?
-                "Selected: " + ui.item.label :
-                "Nothing selected, input was " + this.value);
-        },
         open: function () {
-            $(this).removeClass("ui-corner-all").addClass("ui-corner-top");
-        },
-        close: function () {
-            $(this).removeClass("ui-corner-top").addClass("ui-corner-all");
+            $("#ui-id-1").css('z-index', 1000);
+            $("#ui-id-1").show();
+            return false;
         }
     });
 });

@@ -201,12 +201,6 @@ namespace JanuszMail.Controllers
         // GET: MailBox/Create
         public async Task<IActionResult> Send(string replyTo)
         {
-            var connectionStatus = await ConnectToProvider();
-            if (!connectionStatus)
-            {
-                TempData["ErrorMessage"] = "You have no provider selected. Go to Manage and add provider.";
-                return PartialView("Error");
-            }
             var getSignatureTask = Task.Run(async () =>
             {
                 var user = await _userManager.GetUserAsync(User);
@@ -348,25 +342,25 @@ namespace JanuszMail.Controllers
             return (result == HttpStatusCode.OK);
         }
 
-        public async Task<IList<string>> QuickSearch(string folder, string subject, string sender)
+        public async Task<IActionResult> QuickSearch(string folder, string subject, string sender)
         {
             if (folder == null)
             {
-                return new List<string>();
+                return Json(null);
             }
             var mailList = await GetCachedMails(folder);
             var mails = mailList.AsQueryable();
             if (subject != null)
             {
                 mails = mails.Where(mail => mail.Subject.Contains(subject));
-                return mails.Take(5).Select(mail => mail.Subject).ToList();
+                return Json(mails.Select(mail => mail.Subject).Distinct().Take(5).ToList());
             }
             if (sender != null)
             {
                 mails = mails.Where(mail => mail.SenderName.Contains(sender) || mail.SenderEmail.Contains(sender));
-                return mails.Take(5).Select(mail => mail.SenderName + " " + mail.SenderEmail).ToList();
+                return Json(mails.Select(mail => mail.SenderEmail).Distinct().Take(5).ToList());
             }
-            return new List<string>();
+            return Json(null);
         }
 
         private async Task<IList<MailHeader>> GetCachedMails(string folder)

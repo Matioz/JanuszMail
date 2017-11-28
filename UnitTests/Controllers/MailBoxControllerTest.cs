@@ -100,10 +100,11 @@ namespace UnitTests.Controllers
             {
                 for (int entryId = 0; entryId < pageSize; entryId++)
                 {
+                    var mailId = new MailKit.UniqueId(Convert.ToUInt32(pageId) * Convert.ToUInt32(pageSize) + Convert.ToUInt32(entryId) + 1);
                     mailList.Add(new Mail()
                     {
-                        ID = new MailKit.UniqueId(Convert.ToUInt32(pageId) * Convert.ToUInt32(pageSize) + Convert.ToUInt32(entryId) + 1),
-                        Date = DateTime.Now
+                        ID = mailId,
+                        Date = DateTime.Now.AddMinutes(mailId.Id)
                     });
                 }
             }
@@ -120,7 +121,7 @@ namespace UnitTests.Controllers
             SetProviderConnectionResponse(HttpStatusCode.OK);
             SetProviderAuthenticationState(true);
 
-            var viewResult = controller.ShowMails(page, pageSize, "inbox", "dateDesc", null, null).Result as PartialViewResult;
+            var viewResult = controller.ShowMails(page, pageSize, "inbox", "dateAsc", null, null).Result as PartialViewResult;
             Assert.AreEqual("_ShowMails", viewResult.ViewName);
             Assert.IsNull(viewResult.TempData["ErrorMessage"]);
 

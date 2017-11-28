@@ -96,6 +96,19 @@ namespace JanuszMail.Services
                 }
                 Folders.Add(folder.Name);
             }
+            var draftFolder = _imapClient.GetFolder(SpecialFolder.Drafts);
+                if (draftFolder == null)
+                {
+                    var toplevel = _imapClient.GetFolder(_imapClient.PersonalNamespaces[0]);
+                    var DraftFolder = toplevel.Create(SpecialFolder.Drafts.ToString(), true);
+                    DraftFolder.Expunge();
+<<<<<<< 9784983eff6f681f48abbffedee8d964bf08cee9
+                }
+                Folders.Add("Drafts");
+=======
+                    Folders.Add(SpecialFolder.Drafts.ToString());
+                }
+>>>>>>> Add drafts
             return new Tuple<IList<string>, HttpStatusCode>(Folders, HttpStatusCode.OK);
         }
 
@@ -285,6 +298,9 @@ namespace JanuszMail.Services
         public IMailFolder GetFolder(string name)
         {
             IMailFolder mailFolder = null;
+            if (name == "Drafts"){
+                return _imapClient.GetFolder(SpecialFolder.Drafts);
+            }
             var personal = _imapClient.GetFolder(_imapClient.PersonalNamespaces[0]);
             foreach (var folder in personal.GetSubfolders(false))
             {
@@ -378,6 +394,31 @@ namespace JanuszMail.Services
             _currentFolderSummary = mailFolder.Fetch(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Flags | MessageSummaryItems.Envelope);
             mailFolder.Close();
             _currentFolder = folder;
+        }
+        public HttpStatusCode SaveDraft(MimeMessage mailMessage){
+            if (!IsAuthenticated())
+            {
+                return HttpStatusCode.ExpectationFailed;
+            }
+            var draftFolder = _imapClient.GetFolder(SpecialFolder.Drafts);
+            if (draftFolder != null)
+            {
+                draftFolder.Open(FolderAccess.ReadWrite);
+
+                draftFolder.Append(mailMessage, MessageFlags.Draft);
+                draftFolder.Expunge();
+            }
+            else
+            {
+                var toplevel = _imapClient.GetFolder(_imapClient.PersonalNamespaces[0]);
+                var DraftFolder = toplevel.Create(SpecialFolder.Drafts.ToString(), true);
+
+                DraftFolder.Open(FolderAccess.ReadWrite);
+                DraftFolder.Append(mailMessage, MessageFlags.Draft);
+                DraftFolder.Expunge();
+            }
+            return HttpStatusCode.OK;
+
         }
     }
 }

@@ -22,7 +22,7 @@ $(".async-button").click(function (event) {
 
 $(".async-form").submit(function (event) {
     event.preventDefault();
-    var urlForm = $(this).attr("action") + "/" + actionName;
+    var urlForm = "MailBox/" + actionName;
     if (actionName == "Delete") {
         var deleteButton = $("button.to-remove");
         deleteButton.parentsUntil("tbody").addClass("to-remove");

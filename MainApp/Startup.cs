@@ -65,7 +65,7 @@ namespace JanuszMail
             {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}");
+                    template: "{controller=Mailbox}/{action=Index}");
             });
         }
     }

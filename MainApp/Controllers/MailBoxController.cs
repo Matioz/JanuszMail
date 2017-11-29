@@ -41,6 +41,10 @@ namespace JanuszMail.Controllers
         #region connectMethod
         private async Task<bool> ConnectToProvider()
         {
+            if (_provider.IsAuthenticated())
+            {
+                return true;
+            }
             System.GC.Collect();
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -164,6 +168,7 @@ namespace JanuszMail.Controllers
 
             var tuple = await Task.Run(() => { return _provider.GetMailFromFolder(new UniqueId(ID), folder); });
             var markReadTask = Task.Run(() => _provider.MarkEmailAsRead(new UniqueId(ID), folder));
+            var markCachedMail = MarkCachedMail(ID, true, folder);
             var mail = tuple.Item1;
             var httpStatusCode = tuple.Item2;
             if (mail.summary.Flags.Value.HasFlag(MessageFlags.Draft))
@@ -260,11 +265,9 @@ namespace JanuszMail.Controllers
                 return false;
             }
             uint ID = id ?? 0; //otherwise it won't compile
-            if (String.IsNullOrEmpty(folder))
-            {
-                folder = "Inbox";
-            }
+            var deleteCachedTask = RemoveCachedMail(ID, folder);
             var statusCode = await Task.Run(() => { return _provider.RemoveEmail(new UniqueId(ID), folder); });
+            await deleteCachedTask;
             return statusCode.Equals(HttpStatusCode.OK);
         }
 
@@ -299,6 +302,7 @@ namespace JanuszMail.Controllers
                 HttpStatusCode httpStatusCode = await Task.Run(() => { return _provider.SaveDraft(mail.mimeMessage); });
                 if (httpStatusCode.Equals(HttpStatusCode.OK))
                 {
+
                     return true;
                 }
                 else
@@ -327,6 +331,7 @@ namespace JanuszMail.Controllers
                 HttpStatusCode httpStatusCode = await Task.Run(() => { return _provider.SendEmail(mail.mimeMessage); });
                 if (httpStatusCode.Equals(HttpStatusCode.OK))
                 {
+                    var updateTask = Task.Run(() => UpdateCachedMails(mail.Folder));
                     return true;
                 }
             }
@@ -346,6 +351,8 @@ namespace JanuszMail.Controllers
             {
                 return false;
             }
+
+            var markReadTask = MarkCachedMail(id ?? 0, true, folder);
             HttpStatusCode result = await Task.Run(() => { return _provider.MarkEmailAsRead(new UniqueId(id ?? 0), folder); });
             return (result == HttpStatusCode.OK);
         }
@@ -363,6 +370,8 @@ namespace JanuszMail.Controllers
             {
                 return false;
             }
+
+            var markUnreadTask = MarkCachedMail(id ?? 0, false, folder);
             HttpStatusCode result = await Task.Run(() => { return _provider.MarkEmailAsUnread(new UniqueId(id ?? 0), folder); });
 
             return (result == HttpStatusCode.OK);
@@ -382,8 +391,11 @@ namespace JanuszMail.Controllers
             {
                 return false;
             }
+
+            var deleteCachedTask = RemoveCachedMail(id ?? 0, folder);
             HttpStatusCode result = await Task.Run(() => { return _provider.MoveEmailToFolder(new UniqueId(id ?? 0), folder, destFolder); });
 
+            var updateTask = Task.Run(() => UpdateCachedMails(destFolder));
             return (result == HttpStatusCode.OK);
         }
         #endregion
@@ -400,6 +412,20 @@ namespace JanuszMail.Controllers
             }
             return currentList;
         }
+
+        private async Task MarkCachedMail(uint mailId, bool isRead, string folder)
+        {
+            var list = await GetCachedMails(folder);
+            list.SingleOrDefault(m => m.ID == mailId).IsRead = isRead;
+            HttpContext.Session.SetObjectAsJson(folder, list);
+        }
+
+        private async Task RemoveCachedMail(uint mailId, string folder)
+        {
+            var list = await GetCachedMails(folder);
+            HttpContext.Session.SetObjectAsJson(folder, list.Where(mail => mail.ID != mailId));
+        }
+
         public async Task<bool> UpdateCachedMails(string folder)
         {
             var connectionStatus = await ConnectToProvider();

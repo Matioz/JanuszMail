@@ -3,7 +3,7 @@
 }
 
 <div class="container-flex">
-    <div class="body-content-left">
+    <div class="body-content-left" id="sidebarFolders">
         @await Component.InvokeAsync("MailFolders", new {viewName="SidebarAsync"})
     </div>
     <div class="body-content-right">    
@@ -23,7 +23,3 @@
         <button class="hidden" data-toggle="modal" data-target="#actionStatus" id="modalButton"/>
     </div>
 </div>
-
-@section mailboxScripts {
-    <script src="~/js/Mailbox/layout.js"></script>
-}

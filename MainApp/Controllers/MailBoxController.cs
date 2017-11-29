@@ -27,7 +27,7 @@ namespace JanuszMail.Controllers
     {
         private ProviderParams _providerParams;
         private MailBoxViewModel _mailBoxViewModel;
-
+        #region contructor
         public MailBoxController(IProvider provider, UserManager<ApplicationUser> userManager, JanuszMailDbContext dbContext)
         {
             this._provider = provider;
@@ -36,7 +36,9 @@ namespace JanuszMail.Controllers
             this._mailBoxViewModel = new MailBoxViewModel();
 
         }
+        #endregion
 
+        #region connectMethod
         private async Task<bool> ConnectToProvider()
         {
             System.GC.Collect();
@@ -56,7 +58,9 @@ namespace JanuszMail.Controllers
             }
             return false;
         }
+        #endregion
 
+        #region getActionMethods
         // GET: MailBox
         public async Task<IActionResult> Index(string replyTo = null)
         {
@@ -179,6 +183,68 @@ namespace JanuszMail.Controllers
                 return PartialView("_Details", model: mail);
             }
         }
+
+        [HttpGet, ActionName("DownloadAttachment")]
+        public async Task<ActionResult> DownloadAttachment(int id, string fileName, string folder)
+        {
+            var connectionStatus = await ConnectToProvider();
+            var code = _provider.DownloadAttachment(fileName, new UniqueId((uint)id), folder);
+            if (!System.IO.File.Exists(fileName))
+            {
+                //return HttpStatusCode.ExpectationFailed;
+            }
+            var fileBytes = System.IO.File.ReadAllBytes(fileName);
+            var response = new FileContentResult(fileBytes, "application/octet-stream")
+            {
+                FileDownloadName = fileName
+            };
+            System.IO.File.Delete(fileName);
+            return response;
+        }        // GET: MailBox/Create
+        public async Task<IActionResult> Send(string replyTo)
+        {
+            var getSignatureTask = Task.Run(async () =>
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user.Signature != null && user.Signature.Length != 0)
+                {
+                    return "<br/><br/><br/>" + user.Signature;
+                }
+                return "";
+            });
+            var mail = new Mail();
+            if (!String.IsNullOrEmpty(replyTo))
+            {
+                mail.Recipient = replyTo;
+            }
+            mail.Body = await getSignatureTask;
+            return PartialView("_Send", mail);
+        }
+
+        public async Task<IActionResult> QuickSearch(string folder, string subject, string sender)
+        {
+            if (folder == null)
+            {
+                return Json(null);
+            }
+            var mailList = await GetCachedMails(folder);
+            var mails = mailList.AsQueryable();
+            if (subject != null)
+            {
+                mails = mails.Where(mail => mail.Subject.Contains(subject));
+                return Json(mails.Select(mail => mail.Subject).Distinct().Take(5).ToList());
+            }
+            if (sender != null)
+            {
+                mails = mails.Where(mail => mail.SenderName.Contains(sender) || mail.SenderEmail.Contains(sender));
+                return Json(mails.Select(mail => mail.SenderEmail).Distinct().Take(5).ToList());
+            }
+            return Json(null);
+        }
+        #endregion
+
+        #region postActionMethods
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<bool> Delete(uint? id, string folder)
@@ -202,54 +268,46 @@ namespace JanuszMail.Controllers
             return statusCode.Equals(HttpStatusCode.OK);
         }
 
-        // GET: MailBox/Create
-        public async Task<IActionResult> Send(string replyTo)
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<bool> SaveDraft([Bind("ID,Recipient,Subject,Body")] Mail mail)
         {
-            var getSignatureTask = Task.Run(async () =>
+            var connectionStatus = await ConnectToProvider();
+            if (mail.Recipient == null)
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user.Signature != null && user.Signature.Length != 0)
-                {
-                    return "<br/><br/><br/>" + user.Signature;
-                }
-                return "";
-            });
-            var mail = new Mail();
-            if (!String.IsNullOrEmpty(replyTo))
-            {
-                mail.Recipient = replyTo;
+                mail.Recipient = "";
             }
-            mail.Body = await getSignatureTask;
-            return PartialView("_Send", mail);
-        }
+            if (mail.Subject == null)
+            {
+                mail.Subject = "";
+            }
+            if (mail.Body == null)
+            {
+                mail.Body = "";
+            }
 
-        private async Task<MimeMessage> ConstructMimeMessage(Mail mail)
-        {
-            var builder = new BodyBuilder();
-            var mimeMessage = new MimeMessage();
-            mimeMessage.From.Add(new MailboxAddress(_providerParams.EmailAddress));
-            mimeMessage.To.Add(new MailboxAddress(mail.Recipient));
-            mimeMessage.Subject = mail.Subject;
-            if (mail.Attachments != null)
-                foreach (var attachment in mail.Attachments)
+            if (!connectionStatus)
+            {
+                return false;
+            }
+
+            if (ModelState.IsValid)
+            {
+                mail.mimeMessage = await ConstructMimeMessage(mail);
+
+                HttpStatusCode httpStatusCode = await Task.Run(() => { return _provider.SaveDraft(mail.mimeMessage); });
+                if (httpStatusCode.Equals(HttpStatusCode.OK))
                 {
-                    var tempPath = Path.GetTempPath();
-                    if (attachment.Length > 0)
-                    {
-                        var filePath = Path.Combine(tempPath, attachment.FileName);
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await attachment.CopyToAsync(stream);
-                        }
-                        builder.Attachments.Add(filePath);
-                        System.IO.File.Delete(filePath);
-                    }
+                    return true;
                 }
-            builder.HtmlBody = mail.Body;
-            mimeMessage.Body = builder.ToMessageBody();
-            return mimeMessage;
+                else
+                {
+                    return false;
+                }
+            }
+            return true;
         }
-
         // POST: MailBox/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -273,23 +331,6 @@ namespace JanuszMail.Controllers
                 }
             }
             return false;
-        }
-        [HttpGet, ActionName("DownloadAttachment")]
-        public async Task<ActionResult> DownloadAttachment(int id, string fileName, string folder)
-        {
-            var connectionStatus = await ConnectToProvider();
-            var code = _provider.DownloadAttachment(fileName, new UniqueId((uint)id), folder);
-            if (!System.IO.File.Exists(fileName))
-            {
-                //return HttpStatusCode.ExpectationFailed;
-            }
-            var fileBytes = System.IO.File.ReadAllBytes(fileName);
-            var response = new FileContentResult(fileBytes, "application/octet-stream")
-            {
-                FileDownloadName = fileName
-            };
-            System.IO.File.Delete(fileName);
-            return response;
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -345,28 +386,9 @@ namespace JanuszMail.Controllers
 
             return (result == HttpStatusCode.OK);
         }
+        #endregion
 
-        public async Task<IActionResult> QuickSearch(string folder, string subject, string sender)
-        {
-            if (folder == null)
-            {
-                return Json(null);
-            }
-            var mailList = await GetCachedMails(folder);
-            var mails = mailList.AsQueryable();
-            if (subject != null)
-            {
-                mails = mails.Where(mail => mail.Subject.Contains(subject));
-                return Json(mails.Select(mail => mail.Subject).Distinct().Take(5).ToList());
-            }
-            if (sender != null)
-            {
-                mails = mails.Where(mail => mail.SenderName.Contains(sender) || mail.SenderEmail.Contains(sender));
-                return Json(mails.Select(mail => mail.SenderEmail).Distinct().Take(5).ToList());
-            }
-            return Json(null);
-        }
-
+        #region cacheMethods
         private async Task<IList<MailHeader>> GetCachedMails(string folder)
         {
 
@@ -397,46 +419,37 @@ namespace JanuszMail.Controllers
             }
             return false;
         }
+        #endregion
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<bool> SaveDraft([Bind("ID,Recipient,Subject,Body")] Mail mail)
+        #region messageConstructor
+        private async Task<MimeMessage> ConstructMimeMessage(Mail mail)
         {
-            var connectionStatus = await ConnectToProvider();
-            if (mail.Recipient == null)
-            {
-                mail.Recipient = "";
-            }
-            if (mail.Subject == null)
-            {
-                mail.Subject = "";
-            }
-            if (mail.Body == null)
-            {
-                mail.Body = "";
-            }
-
-            if (!connectionStatus)
-            {
-                return false;
-            }
-
-            if (ModelState.IsValid)
-            {
-                mail.mimeMessage = await ConstructMimeMessage(mail);
-
-                HttpStatusCode httpStatusCode = await Task.Run(() => { return _provider.SaveDraft(mail.mimeMessage); });
-                if (httpStatusCode.Equals(HttpStatusCode.OK))
+            var builder = new BodyBuilder();
+            var mimeMessage = new MimeMessage();
+            mimeMessage.From.Add(new MailboxAddress(_providerParams.EmailAddress));
+            mimeMessage.To.Add(new MailboxAddress(mail.Recipient));
+            mimeMessage.Subject = mail.Subject;
+            if (mail.Attachments != null)
+                foreach (var attachment in mail.Attachments)
                 {
-                    return true;
+                    var tempPath = Path.GetTempPath();
+                    if (attachment.Length > 0)
+                    {
+                        var filePath = Path.Combine(tempPath, attachment.FileName);
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await attachment.CopyToAsync(stream);
+                        }
+                        builder.Attachments.Add(filePath);
+                        System.IO.File.Delete(filePath);
+                    }
                 }
-                else
-                {
-                    return false;
-                }
-            }
-            return true;
+            builder.HtmlBody = mail.Body;
+            mimeMessage.Body = builder.ToMessageBody();
+            return mimeMessage;
         }
+        #endregion
+
         private readonly IProvider _provider;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JanuszMailDbContext _dbContext;

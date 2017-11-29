@@ -23,3 +23,25 @@
         <button class="hidden" data-toggle="modal" data-target="#actionStatus" id="modalButton"/>
     </div>
 </div>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script>
+    function fetchdata(){
+        $('a[folder-name]').each(function() {
+            var folderName = $(this).attr("folder-name");
+           // alert(folderName);
+    // `this` is the div
+    //return;
+    var folderName = $(this).attr("folder-name");
+    $.ajax({
+        url: "MailBox/UpdateCachedMails",
+        data: { folder: folderName },
+        contentType: 'text/html; charset=utf-8',
+        type: 'GET'
+    });
+});
+}
+
+$(document).ready(function(){
+ setInterval(fetchdata,300000);
+});
+</script>

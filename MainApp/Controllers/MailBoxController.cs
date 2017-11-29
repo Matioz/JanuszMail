@@ -246,6 +246,12 @@ namespace JanuszMail.Controllers
             }
             return Json(null);
         }
+
+        public async Task<IActionResult> ShowFolders()
+        {
+            await ConnectToProvider();
+            return ViewComponent("MailFolders", "SidebarAsync");
+        }
         #endregion
 
         #region postActionMethods

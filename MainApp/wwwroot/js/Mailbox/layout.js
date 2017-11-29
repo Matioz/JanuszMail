@@ -114,4 +114,21 @@ $(document).ready(function () {
             return false;
         }
     });
+    $("button.async-reload-folders").click(function (event) {
+        event.preventDefault();
+        var currentContent = $('#sidebarFolders').html();
+        $.ajax({
+            url: "MailBox/ShowFolders",
+            contentType: 'text/html; charset=utf-8',
+            type: 'GET',
+            success: function (data) {
+                $('#sidebarFolders').html(data);
+            },
+            error: function (obj) {
+                $('#sidebarFolders').html(currentContent);
+                $('#statusBody').html("Something happened");
+                $("#modalButton").click();
+            }
+        });
+    });
 });
